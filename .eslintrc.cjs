@@ -14,5 +14,17 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'warn',
     'no-console': ['warn', { allow: ['warn', 'error'] }],
   },
-  ignorePatterns: ['node_modules', '.expo', 'dist', 'build', '.expo-shared', '*.lock', '.env', '.env.local', 'expo-env.d.ts', 'ios', 'android'],
+  ignorePatterns: [
+    'node_modules',
+    '.expo',
+    'dist',
+    'build',
+    '.expo-shared',
+    '*.lock',
+    '.env',
+    '.env.local',
+    'expo-env.d.ts',
+    'ios',
+    'android',
+  ],
 };
