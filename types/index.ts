@@ -1,4 +1,10 @@
-// Type definitions for the app
+export interface Slide {
+  id: string;
+  type: 'image' | 'content';
+  image?: string;
+  title?: string;
+  description?: string;
+}
 
 export interface News {
   id: string;
@@ -6,12 +12,35 @@ export interface News {
   description: string;
   content: string;
   image?: string;
-  author: string;
   category: string;
   tags: string[];
   createdAt: string;
   updatedAt: string;
   url?: string;
+}
+
+export interface CardNews extends News {
+  likes: number;
+  isLiked: boolean;
+  isSaved: boolean;
+  commentsCount: number;
+  slides?: Slide[];
+  comments?: Comment[];
+}
+
+export interface Comment {
+  id: string;
+  newsId: string;
+  author: string;
+  content: string;
+  createdAt: string;
+  avatar?: string;
+}
+
+export interface UserAction {
+  newsId: string;
+  action: 'like' | 'unlike' | 'save' | 'unsave';
+  timestamp: string;
 }
 
 export interface Category {
