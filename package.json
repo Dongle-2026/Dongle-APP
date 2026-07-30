@@ -6,12 +6,14 @@
     "expo": "~56.0.8",
     "expo-constants": "~56.0.16",
     "expo-font": "~56.0.5",
+    "expo-linear-gradient": "^57.0.1",
     "expo-linking": "~56.0.13",
     "expo-router": "~56.2.8",
     "expo-splash-screen": "~56.0.10",
     "expo-status-bar": "~56.0.4",
     "expo-symbols": "~56.0.5",
     "expo-web-browser": "~56.0.5",
+    "lucide-react-native": "^1.27.0",
     "nativewind": "^4.2.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -38,7 +40,7 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "postinstall": "patch-package",
