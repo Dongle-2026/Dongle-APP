@@ -53,6 +53,7 @@ export default function TabLayout() {
         name="search"
         options={{
           title: 'Search',
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <SymbolView
               name={{
@@ -70,6 +71,7 @@ export default function TabLayout() {
         name="saved"
         options={{
           title: 'Saved',
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <SymbolView
               name={{

@@ -1,14 +1,8 @@
-import CardNewsPost from '@/components/cards/card-news';
+import CardNewsPost from '@/components/cards/card-news-post';
 import { newsService } from '@/services/newsService';
 import { CardNews } from '@/types';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  Text,
-  View
-} from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, Text, View } from 'react-native';
 
 export default function HomeScreen() {
   const [news, setNews] = useState<CardNews[]>([]);
