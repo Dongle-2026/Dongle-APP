@@ -1,14 +1,13 @@
-import CardNewsPost from '@/components/CardNewsPost';
+import CardNewsPost from '@/components/cards/card-news';
 import { newsService } from '@/services/newsService';
-import type { CardNews } from '@/types';
+import { CardNews } from '@/types';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
   Text,
-  TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 export default function HomeScreen() {
@@ -118,10 +117,6 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-mono-100">
-      <TouchableOpacity className="p-4 bg-mono-200 gap-1">
-        <Text className="text-lg font-semibold">투데이 돈글</Text>
-        <Text className="text-md">오늘의 주요소식 바로 확인하기</Text>
-      </TouchableOpacity>
       <FlatList
         data={news}
         renderItem={renderItem}
