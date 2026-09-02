@@ -46,8 +46,7 @@ export interface UserAction {
 export interface Category {
   id: string;
   name: string;
-  slug: string;
-  icon?: string;
+  isNew?: boolean;
 }
 
 export interface Author {
