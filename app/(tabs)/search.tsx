@@ -8,7 +8,7 @@ export default function SearchScreen() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   return (
     <SafeAreaView className="bg-mono-100">
-      <View className="mx-4 h-14 flex-row items-center rounded-2xl border-[2px] border-mono-400/30 bg-white/70 px-4">
+      <View className="m-4 h-14 flex-row items-center rounded-2xl border-[2px] border-mono-400/30 bg-white/70 px-4">
         <Search size={20} color="#737373" />
 
         <TextInput
