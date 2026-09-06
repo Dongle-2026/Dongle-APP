@@ -1,4 +1,4 @@
-import { keywordNews } from '@/utils/mock';
+import { KEYWORD_NEWS } from '@/utils/mock';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
@@ -20,7 +20,7 @@ export default function NewsListScreen() {
         <Text className="text-lg font-semibold">검색어</Text>
       </TouchableOpacity>
       <FlatList
-        data={keywordNews}
+        data={KEYWORD_NEWS}
         numColumns={2}
         keyExtractor={(item) => item.id.toString()}
         showsVerticalScrollIndicator={false}

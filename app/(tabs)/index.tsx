@@ -65,15 +65,7 @@ export default function HomeScreen() {
     fetchNews(1, true);
   }, [fetchNews]);
 
-  const renderItem = ({ item }: { item: CardNews }) => (
-    <CardNewsPost
-      news={item}
-      onCommentPress={(newsId) => {
-        // 댓글 화면으로 이동할 수 있음
-        console.log('댓글 보기:', newsId);
-      }}
-    />
-  );
+  const renderItem = ({ item }: { item: CardNews }) => <CardNewsPost news={item} />;
 
   const renderFooter = () => {
     if (!hasMore) return null;

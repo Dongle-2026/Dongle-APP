@@ -1,6 +1,6 @@
 import CategorySlider from '@/components/category-slider';
 import Searchbar from '@/components/search-bar';
-import { categories, keywordNews } from '@/utils/mock';
+import { CATEGORIES, KEYWORD_NEWS } from '@/utils/mock';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
@@ -12,13 +12,13 @@ export default function SearchScreen() {
       <Searchbar />
 
       <CategorySlider
-        category={categories}
+        category={CATEGORIES}
         selectedCategory={selectedCategory}
         onPress={(categoryId) => setSelectedCategory(categoryId)}
       />
 
       <FlatList
-        data={keywordNews}
+        data={KEYWORD_NEWS}
         numColumns={3}
         scrollEnabled={false}
         keyExtractor={(item) => item.id}

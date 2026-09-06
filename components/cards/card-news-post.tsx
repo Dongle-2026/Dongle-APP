@@ -2,18 +2,17 @@ import type { CardNews } from '@/types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRef, useState } from 'react';
 import {
-    Dimensions,
-    Image,
-    NativeScrollEvent,
-    NativeSyntheticEvent,
-    ScrollView,
-    Text,
-    View,
+  Dimensions,
+  Image,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  Text,
+  View,
 } from 'react-native';
 
 interface CardNewsPostProps {
   news: CardNews;
-  onCommentPress?: (newsId: string) => void;
 }
 
 const { width: screenWidth } = Dimensions.get('window');
