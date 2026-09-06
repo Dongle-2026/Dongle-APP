@@ -1,6 +1,6 @@
 import { Link, Tabs } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { Pressable } from 'react-native';
+import { Image, Pressable } from 'react-native';
 
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -16,12 +16,19 @@ export default function TabLayout() {
         // Disable the static render of the header on web
         // to prevent a hydration error in React Navigation v6.
         headerShown: useClientOnlyValue(false, true),
+        headerTitle: () => (
+          <Image
+            source={require('@/assets/images/logo1.png')}
+            style={{ width: 75, height: 20 }}
+            resizeMode="contain"
+          />
+        ),
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: '',
           tabBarIcon: ({ color }) => (
             <SymbolView
               name={{
