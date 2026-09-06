@@ -59,9 +59,6 @@ export default function CardNewsPost({ news }: CardNewsPostProps) {
           scrollEventThrottle={16}
           onScroll={handleScroll}
           showsHorizontalScrollIndicator={false}
-          bounces={hasMultipleSlides}
-          alwaysBounceHorizontal={hasMultipleSlides}
-          overScrollMode="never"
         >
           {slides.map((slide) => (
             <View key={slide.id} style={{ width: cardWidth }} className="h-full">
