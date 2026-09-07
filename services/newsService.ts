@@ -1,40 +1,9 @@
-import type { CardNews, Comment, Slide, UserAction } from '@/types';
+import type { CardNews, Slide, UserAction } from '@/types';
 import { type ApiResponse } from '@/utils/api';
-
-// Mock Data
-const MOCK_IMAGES = [
-  'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=1080&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=1080&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=1080&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1614008375890-cb53b6c5f8d5?w=1080&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1626285861696-6b3d26b81c3f?w=1080&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1616589616590-8abc4df2b03d?w=1080&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1622610146325-b50b852cd72b?w=1080&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1631749995191-fcf0ee2c3f24?w=1080&h=600&fit=crop',
-];
-
-const CATEGORIES = ['기술', '비즈니스', '트렌드', '스타트업', '과학', '금융'];
-
-const SLIDE_CONTENTS = [
-  [
-    { type: 'image', title: '월 50 넣고 2,200만 원 받자! 청년미래적금 6월 출시' },
-    { type: 'content', title: '핵심 내용 1', description: '이것이 가장 중요한 무언가입니다.' },
-    { type: 'content', title: '핵심 내용 2', description: '이와 함께 알아야 할 것입니다.' },
-  ],
-  [
-    { type: 'image', title: '월 50 냥고' },
-    { type: 'content', title: '2,200만 원 받자!', description: '청년미래적금 6월 출시' },
-    { type: 'content', title: '상세 정보', description: 'd-12 남았네요!' },
-  ],
-  [
-    { type: 'image', title: '시작합니다' },
-    { type: 'content', title: '첫 번째 단계', description: '기본부터 시작하세요.' },
-    { type: 'content', title: '두 번째 단계', description: '이제 심화 과정입니다.' },
-  ],
-];
+import { CARD_NEWS, MOCK_IMAGES } from '@/utils/mock';
 
 const generateSlides = (id: number): Slide[] => {
-  const baseSlides = SLIDE_CONTENTS[id % SLIDE_CONTENTS.length];
+  const baseSlides = CARD_NEWS[id % CARD_NEWS.length];
   const imageUrl = MOCK_IMAGES[id % MOCK_IMAGES.length];
 
   return baseSlides.map((slide, idx) => ({
@@ -74,17 +43,13 @@ const generateMockNews = (page: number, limit: number): CardNews[] => {
       ][id % 8],
       content: '이 기사의 전체 내용입니다. 더 자세한 정보가 포함되어 있습니다.',
       image: MOCK_IMAGES[id % MOCK_IMAGES.length],
-      category: CATEGORIES[id % CATEGORIES.length],
+      category: '전체',
       tags: ['추천', '최신', '핫'],
       createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
       updatedAt: new Date().toISOString(),
       url: `https://example.com/news/${id}`,
-      likes: Math.floor(Math.random() * 500) + 10,
-      isLiked: Math.random() > 0.7,
       isSaved: Math.random() > 0.8,
-      commentsCount: Math.floor(Math.random() * 50) + 5,
       slides: generateSlides(id),
-      comments: [],
     };
   });
 };
@@ -154,43 +119,6 @@ export const newsService = {
     });
   },
 
-  // Like/Unlike
-  async likeNews(newsId: string): Promise<ApiResponse<UserAction>> {
-    // 실제 API 사용 시 주석 해제
-    // return apiClient.post<UserAction>(`/api/news/${newsId}/like`, {});
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: {
-            newsId,
-            action: 'like',
-            timestamp: new Date().toISOString(),
-          },
-          status: 200,
-        });
-      }, 300);
-    });
-  },
-
-  async unlikeNews(newsId: string): Promise<ApiResponse<UserAction>> {
-    // 실제 API 사용 시 주석 해제
-    // return apiClient.post<UserAction>(`/api/news/${newsId}/unlike`, {});
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: {
-            newsId,
-            action: 'unlike',
-            timestamp: new Date().toISOString(),
-          },
-          status: 200,
-        });
-      }, 300);
-    });
-  },
-
   // Save/Unsave
   async saveNews(newsId: string): Promise<ApiResponse<UserAction>> {
     // 실제 API 사용 시 주석 해제
@@ -225,65 +153,6 @@ export const newsService = {
           status: 200,
         });
       }, 300);
-    });
-  },
-
-  // Comments
-  async getComments(newsId: string, page: number = 1): Promise<ApiResponse<Comment[]>> {
-    // 실제 API 사용 시 주석 해제
-    // return apiClient.get<Comment[]>(`/api/news/${newsId}/comments?page=${page}`);
-
-    const mockComments: Comment[] = [
-      {
-        id: 'comment-1',
-        newsId,
-        author: '사용자1',
-        content: '정말 유용한 정보네요! 감사합니다.',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: 'comment-2',
-        newsId,
-        author: '사용자2',
-        content: '이 주제에 대해 더 알고 싶습니다.',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: 'comment-3',
-        newsId,
-        author: '사용자3',
-        content: '좋은 통찰력입니다!',
-        createdAt: new Date().toISOString(),
-      },
-    ];
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: mockComments,
-          status: 200,
-        });
-      }, 500);
-    });
-  },
-
-  async addComment(newsId: string, content: string): Promise<ApiResponse<Comment>> {
-    // 실제 API 사용 시 주석 해제
-    // return apiClient.post<Comment>(`/api/news/${newsId}/comments`, { content });
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: {
-            id: `comment-${Date.now()}`,
-            newsId,
-            author: '나',
-            content,
-            createdAt: new Date().toISOString(),
-          },
-          status: 201,
-        });
-      }, 400);
     });
   },
 };

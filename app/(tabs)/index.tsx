@@ -1,8 +1,8 @@
 import CardNewsPost from '@/components/cards/card-news-post';
 import { newsService } from '@/services/newsService';
 import { CardNews } from '@/types';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Image, RefreshControl, Text, View } from 'react-native';
 
 export default function HomeScreen() {
   const [news, setNews] = useState<CardNews[]>([]);
@@ -11,6 +11,10 @@ export default function HomeScreen() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const lastScrollY = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
 
   // 초기 뉴스 로드
   const fetchNews = useCallback(async (pageNum: number = 1, isRefresh: boolean = false) => {
@@ -65,15 +69,27 @@ export default function HomeScreen() {
     fetchNews(1, true);
   }, [fetchNews]);
 
-  const renderItem = ({ item }: { item: CardNews }) => (
-    <CardNewsPost
-      news={item}
-      onCommentPress={(newsId) => {
-        // 댓글 화면으로 이동할 수 있음
-        console.log('댓글 보기:', newsId);
-      }}
-    />
-  );
+  const handleScroll = (event: { nativeEvent: { contentOffset: { y: number } } }) => {
+    const y = Math.max(0, event.nativeEvent.contentOffset.y);
+    const previousY = lastScrollY.current;
+    const diff = y - previousY;
+
+    if (y <= 0) {
+      headerTranslateY.setValue(0);
+    } else if (diff > 5) {
+      headerTranslateY.setValue(-100);
+    }
+
+    lastScrollY.current = y;
+  };
+
+  const headerOpacity = headerTranslateY.interpolate({
+    inputRange: [-100, 0],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
+  const renderItem = ({ item }: { item: CardNews }) => <CardNewsPost news={item} />;
 
   const renderFooter = () => {
     if (!hasMore) return null;
@@ -111,7 +127,29 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-mono-100">
-      <FlatList
+      <Animated.View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 120,
+          zIndex: 10,
+          transform: [{ translateY: headerTranslateY }],
+          opacity: headerOpacity,
+          backgroundColor: '#FFFFFF',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingTop: 40,
+        }}
+      >
+        <Image
+          source={require('@/assets/images/logo1.png')}
+          style={{ width: 75, height: 20 }}
+          resizeMode="contain"
+        />
+      </Animated.View>
+      <Animated.FlatList
         data={news}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
@@ -119,9 +157,20 @@ export default function HomeScreen() {
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmptyState}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            progressViewOffset={250}
+          />
+        }
         showsVerticalScrollIndicator={false}
+        onScroll={(event) => {
+          scrollY.setValue(event.nativeEvent.contentOffset.y);
+          handleScroll(event);
+        }}
         scrollEventThrottle={16}
+        contentContainerStyle={{ paddingTop: 120 }}
       />
     </View>
   );

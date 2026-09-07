@@ -1,31 +1,24 @@
-import CategorySlider from '@/components/CategorySlider';
-import { categories, keywordNews } from '@/utils/mock';
-import { Search } from 'lucide-react-native';
+import CategorySlider from '@/components/category-slider';
+import Searchbar from '@/components/search-bar';
+import { CATEGORIES, KEYWORD_NEWS } from '@/utils/mock';
+import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 export default function SearchScreen() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   return (
     <SafeAreaView className="bg-mono-100">
-      <View className="m-4 h-14 flex-row items-center rounded-2xl border-[2px] border-mono-400/30 bg-white/70 px-4">
-        <Search size={20} color="#737373" />
-
-        <TextInput
-          placeholder="지금 주목할 소식"
-          placeholderTextColor="#A3A3A3"
-          className="ml-3 flex-1 text-[15px]"
-        />
-      </View>
+      <Searchbar />
 
       <CategorySlider
-        category={categories}
+        category={CATEGORIES}
         selectedCategory={selectedCategory}
         onPress={(categoryId) => setSelectedCategory(categoryId)}
       />
 
       <FlatList
-        data={keywordNews}
+        data={KEYWORD_NEWS}
         numColumns={3}
         scrollEnabled={false}
         keyExtractor={(item) => item.id}
@@ -33,7 +26,10 @@ export default function SearchScreen() {
         contentContainerStyle={{ gap: 2 }}
         className="px-4"
         renderItem={({ item }) => (
-          <TouchableOpacity className="flex-1 h-48 overflow-hidden ">
+          <TouchableOpacity
+            onPress={() => router.push('/news-list')}
+            className="flex-1 h-48 overflow-hidden "
+          >
             <Image
               source={{ uri: item.image }}
               className="absolute inset-0 h-full w-full"

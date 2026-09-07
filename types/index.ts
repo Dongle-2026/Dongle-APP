@@ -20,12 +20,8 @@ export interface News {
 }
 
 export interface CardNews extends News {
-  likes: number;
-  isLiked: boolean;
   isSaved: boolean;
-  commentsCount: number;
   slides?: Slide[];
-  comments?: Comment[];
 }
 
 export interface Comment {
