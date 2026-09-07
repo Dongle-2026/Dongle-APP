@@ -96,9 +96,13 @@ export const newsService = {
 
     return new Promise((resolve) => {
       setTimeout(() => {
-        const news = generateMockNews(1, 10)[0];
+        const numericId = Number(id.replace('news-', ''));
+        const page = Math.floor(numericId / 10) + 1;
+        const index = numericId % 10;
+        const news = generateMockNews(page, 10)[index];
+
         resolve({
-          data: { ...news, id },
+          data: news ? { ...news, id } : generateMockNews(1, 10)[0],
           status: 200,
         });
       }, 500);

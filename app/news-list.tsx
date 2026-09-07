@@ -33,6 +33,12 @@ export default function NewsListScreen() {
         }}
         renderItem={({ item }) => (
           <TouchableOpacity
+            onPress={() => {
+              router.push({
+                pathname: '/news-card',
+                params: { id: item.id },
+              });
+            }}
             style={{ width: cardWidth }}
             className="h-[220px] overflow-hidden rounded-lg"
           >
