@@ -1,4 +1,4 @@
-import CardNewsPost from '@/components/cards/card-news-post';
+import NewsPost from '@/components/news/news-post';
 import { newsService } from '@/services';
 import type { CardNews } from '@/types';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -55,7 +55,7 @@ export function NewsCardScreen() {
       >
         <ChevronLeft size={28} />
       </TouchableOpacity>
-      <CardNewsPost news={news} />
+      <NewsPost news={news} />
     </SafeAreaView>
   );
 }
