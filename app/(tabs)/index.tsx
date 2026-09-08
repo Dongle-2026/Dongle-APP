@@ -89,7 +89,9 @@ export default function HomeScreen() {
     extrapolate: 'clamp',
   });
 
-  const renderItem = ({ item }: { item: CardNews }) => <NewsPost news={item} />;
+  const renderItem = ({ item }: { item: CardNews }) => (
+    <NewsPost news={item} isPress={true} onPress={() => {}} />
+  );
 
   const renderFooter = () => {
     if (!hasMore) return null;

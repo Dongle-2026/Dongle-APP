@@ -13,15 +13,20 @@ import {
 
 interface NewsPostProps {
   news: CardNews;
+  isPress?: boolean;
+  onPress?: () => void;
 }
 
 const { width: screenWidth } = Dimensions.get('window');
 const CARD_HORIZONTAL_PADDING = 16;
 
-export default function NewsPost({ news }: NewsPostProps) {
+export default function NewsPost({ news, isPress = false, onPress }: NewsPostProps) {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [cardWidth, setCardWidth] = useState(screenWidth - CARD_HORIZONTAL_PADDING * 2);
   const scrollViewRef = useRef<ScrollView>(null);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const hasMoved = useRef(false);
 
   const slides = news.slides || [];
   const hasMultipleSlides = slides.length > 1;
@@ -59,6 +64,24 @@ export default function NewsPost({ news }: NewsPostProps) {
           scrollEventThrottle={16}
           onScroll={handleScroll}
           showsHorizontalScrollIndicator={false}
+          onTouchStart={(event) => {
+            touchStartX.current = event.nativeEvent.pageX;
+            touchStartY.current = event.nativeEvent.pageY;
+            hasMoved.current = false;
+          }}
+          onTouchMove={(event) => {
+            const dx = Math.abs(event.nativeEvent.pageX - touchStartX.current);
+            const dy = Math.abs(event.nativeEvent.pageY - touchStartY.current);
+
+            if (dx > 8 || dy > 8) {
+              hasMoved.current = true;
+            }
+          }}
+          onTouchEnd={() => {
+            if (isPress && !hasMoved.current) {
+              onPress?.();
+            }
+          }}
         >
           {slides.map((slide) => (
             <View key={slide.id} style={{ width: cardWidth }} className="h-full">
