@@ -1,8 +1,31 @@
+import NewsDetail from '@/components/news/news-detail';
 import NewsPost from '@/components/news/news-post';
 import { newsService } from '@/services/newsService';
 import { CardNews } from '@/types';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Image, RefreshControl, Text, View } from 'react-native';
+
+type SelectedNews = {
+  id: string;
+  image: string;
+  keyword: string;
+};
+
+function NewsItem({
+  item,
+  onPress,
+}: {
+  item: CardNews;
+  onPress: (item: CardNews, cardRef: RefObject<View | null>) => void;
+}) {
+  const cardRef = useRef<View>(null);
+
+  return (
+    <View ref={cardRef} collapsable={false}>
+      <NewsPost news={item} isPress={true} onPress={() => onPress(item, cardRef)} />
+    </View>
+  );
+}
 
 export default function HomeScreen() {
   const [news, setNews] = useState<CardNews[]>([]);
@@ -15,6 +38,25 @@ export default function HomeScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
   const headerTranslateY = useRef(new Animated.Value(0)).current;
+
+  const [selectedItem, setSelectedItem] = useState<SelectedNews | null>(null);
+  const [selectedCardRef, setSelectedCardRef] = useState<RefObject<View | null> | null>(null);
+
+  const handleCardPress = (item: CardNews, cardRef: RefObject<View | null>) => {
+    if (!item.image || !item.title) return;
+
+    setSelectedItem({
+      id: item.id,
+      image: item.image,
+      keyword: item.title,
+    });
+    setSelectedCardRef(cardRef);
+  };
+
+  const handleClose = () => {
+    setSelectedItem(null);
+    setSelectedCardRef(null);
+  };
 
   // 초기 뉴스 로드
   const fetchNews = useCallback(async (pageNum: number = 1, isRefresh: boolean = false) => {
@@ -90,8 +132,22 @@ export default function HomeScreen() {
   });
 
   const renderItem = ({ item }: { item: CardNews }) => (
-    <NewsPost news={item} isPress={true} onPress={() => {}} />
+    <NewsItem item={item} onPress={handleCardPress} />
   );
+
+  const renderNewsDetail = () => {
+    if (!selectedItem || !selectedCardRef) return null;
+
+    return (
+      <NewsDetail
+        newsId={selectedItem.id}
+        thumbnail={selectedItem.image}
+        title={selectedItem.keyword}
+        cardRef={selectedCardRef}
+        onClose={handleClose}
+      />
+    );
+  };
 
   const renderFooter = () => {
     if (!hasMore) return null;
@@ -174,6 +230,7 @@ export default function HomeScreen() {
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingTop: 120 }}
       />
+      {renderNewsDetail()}
     </View>
   );
 }
