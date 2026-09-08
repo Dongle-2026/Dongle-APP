@@ -1,4 +1,4 @@
-import CardNewsPost from '@/components/cards/card-news-post';
+import NewsPost from '@/components/news/news-post';
 import { newsService } from '@/services';
 import type { CardNews } from '@/types';
 import { KEYWORD_NEWS } from '@/utils/mock';
@@ -271,7 +271,7 @@ export default function NewsListScreen() {
                     >
                       <ChevronLeft size={28} />
                     </TouchableOpacity>
-                    <CardNewsPost news={selectedNews} />
+                    <NewsPost news={selectedNews} />
                   </SafeAreaView>
                 ) : (
                   <SafeAreaView className="flex-1 h-full w-full bg-mono-100">

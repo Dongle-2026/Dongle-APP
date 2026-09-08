@@ -1,4 +1,4 @@
-import CardNewsPost from '@/components/cards/card-news-post';
+import NewsPost from '@/components/news/news-post';
 import { newsService } from '@/services/newsService';
 import { CardNews } from '@/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -89,7 +89,7 @@ export default function HomeScreen() {
     extrapolate: 'clamp',
   });
 
-  const renderItem = ({ item }: { item: CardNews }) => <CardNewsPost news={item} />;
+  const renderItem = ({ item }: { item: CardNews }) => <NewsPost news={item} />;
 
   const renderFooter = () => {
     if (!hasMore) return null;
