@@ -2,6 +2,7 @@ import NewsDetail from '@/components/news/news-detail';
 import NewsPost from '@/components/news/news-post';
 import { newsService } from '@/services/newsService';
 import { CardNews } from '@/types';
+import { useNavigation } from 'expo-router';
 import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Image, RefreshControl, Text, View } from 'react-native';
 
@@ -41,6 +42,14 @@ export default function HomeScreen() {
 
   const [selectedItem, setSelectedItem] = useState<SelectedNews | null>(null);
   const [selectedCardRef, setSelectedCardRef] = useState<RefObject<View | null> | null>(null);
+
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: selectedItem ? { display: 'none' } : undefined,
+    });
+  }, [navigation, selectedItem]);
 
   const handleCardPress = (item: CardNews, cardRef: RefObject<View | null>) => {
     if (!item.image || !item.title) return;
