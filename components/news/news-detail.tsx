@@ -1,13 +1,15 @@
+import NewsBody from '@/components/news/news-body';
 import NewsPost from '@/components/news/news-post';
 import NewsCardTransition, {
-    type NewsCardTransitionRef,
+  type NewsCardTransitionRef,
 } from '@/components/transition/news-card-transition';
 import { newsService } from '@/services';
 import type { CardNews } from '@/types';
+import { newsBodyMock } from '@/utils/mock';
 import { ChevronLeft } from 'lucide-react-native';
 import type { RefObject } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type NewsDetailProps = {
@@ -30,10 +32,6 @@ export default function NewsDetail({
 
   const transitionRef = useRef<NewsCardTransitionRef>(null);
 
-  /**
-   * newsId가 변경될 때마다
-   * 해당 뉴스의 상세 데이터를 조회
-   */
   useEffect(() => {
     setNews(null);
     setIsClosing(false);
@@ -48,15 +46,15 @@ export default function NewsDetail({
       });
   }, [newsId]);
 
-  /**
-   * 헤더의 뒤로가기 버튼
-   */
   const handleClose = () => {
     if (isClosing) return;
-
     setIsClosing(true);
     transitionRef.current?.close();
   };
+
+  // 목업: API 연결 전까지 newsBodyMock 사용
+  // 실제 연결 시: newsBodyService.getBodyById(newsId) 로 교체
+  const bodyData = { ...newsBodyMock, newsId };
 
   return (
     <NewsCardTransition
@@ -80,11 +78,28 @@ export default function NewsDetail({
           <ChevronLeft size={28} />
         </TouchableOpacity>
 
-        {/* 뉴스 로딩 */}
+        {/* 컨텐츠 */}
         {!news ? (
-          <View className="h-[480px] bg-mono-300 rounded-2xl mx-4 my-2" />
+          // 로딩 스켈레톤
+          <View className="mx-4 my-2 gap-3">
+            <View className="h-[480px] bg-mono-300 rounded-2xl" />
+            <View className="h-5 bg-mono-300 rounded-lg w-3/4" />
+            <View className="h-5 bg-mono-300 rounded-lg w-1/2" />
+            <View className="h-4 bg-mono-300 rounded-lg" />
+            <View className="h-4 bg-mono-300 rounded-lg" />
+            <View className="h-4 bg-mono-300 rounded-lg w-5/6" />
+          </View>
         ) : (
-          <NewsPost news={news} />
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 40 }}
+          >
+            {/* 카드뉴스 (기존 컴포넌트) */}
+            <NewsPost news={news} />
+
+            {/* 본문 학습 섹션 */}
+            <NewsBody data={bodyData} />
+          </ScrollView>
         )}
       </SafeAreaView>
     </NewsCardTransition>
