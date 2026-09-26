@@ -13,7 +13,7 @@ export const mockProfile: UserProfile = {
   id: 'user-001',
   nickname: '단지',
   bio: '매일 조금씩, 경제 공부 중 ',
-  avatarEmoji: '🐝',
+  avatarId: 'default',
   oauthProvider: 'kakao',
   joinedAt: '2025.03.14',
 };
@@ -220,17 +220,25 @@ export const mockNotificationSettings: NotificationSetting = {
   streakAlert: false,
 };
 
-export const AVATAR_EMOJI_OPTIONS = [
-  '🐝',
-  '🦊',
-  '🐼',
-  '🐨',
-  '🦁',
-  '🐯',
-  '🐸',
-  '🐙',
-  '🦋',
-  '🐬',
-  '🦄',
-  '🐲',
+export const AVATAR_OPTIONS = [
+  {
+    id: 'default',
+    source: require('@/assets/avatars/default.png'),
+  },
+  {
+    id: 'shy',
+    source: require('@/assets/avatars/shy.png'),
+  },
+  {
+    id: 'fire',
+    source: require('@/assets/avatars/fire.png'),
+  },
+  {
+    id: 'happy',
+    source: require('@/assets/avatars/happy.png'),
+  },
+  {
+    id: 'oops',
+    source: require('@/assets/avatars/wow.png'),
+  },
 ];

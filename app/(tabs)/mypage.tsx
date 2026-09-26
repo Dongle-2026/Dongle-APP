@@ -4,6 +4,7 @@ import ActivityHeatmap from '@/components/mypage/ActivityHeatmap';
 import ProfileEditModal from '@/components/mypage/ProfileEditModal';
 import SettingsModal from '@/components/mypage/SettingsModal';
 import {
+  AVATAR_OPTIONS,
   mockActivityData,
   mockLearningStats,
   mockMyActivity,
@@ -13,7 +14,7 @@ import {
 import type { NotificationSetting, UserProfile } from '@/types/mypage';
 import { Flame, LucideIcon, Newspaper, Settings, Share, Trophy } from 'lucide-react-native';
 import { useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // ─── 작은 유틸 컴포넌트들 ────────────────────────────────────────────────────
@@ -74,9 +75,11 @@ export default function MypageScreen() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  const handleProfileSave = (updated: Pick<UserProfile, 'nickname' | 'bio' | 'avatarEmoji'>) => {
+  const handleProfileSave = (updated: Pick<UserProfile, 'nickname' | 'bio' | 'avatarId'>) => {
     setProfile((prev) => ({ ...prev, ...updated }));
   };
+
+  const selectedAvatar = AVATAR_OPTIONS.find((avatar) => avatar.id === profile.avatarId);
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="bg-mono-100">
@@ -146,7 +149,15 @@ export default function MypageScreen() {
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ fontSize: 36 }}>{profile.avatarEmoji}</Text>
+              {selectedAvatar && (
+                <Image
+                  source={selectedAvatar.source}
+                  style={{
+                    width: 48,
+                    height: 55,
+                  }}
+                />
+              )}
             </View>
 
             {/* 닉네임 + 소개 + 프로필 편집 버튼 */}

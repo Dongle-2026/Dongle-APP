@@ -1,10 +1,11 @@
-import { AVATAR_EMOJI_OPTIONS } from '@/mocks/mypageMock';
+import { AVATAR_OPTIONS } from '@/mocks/mypageMock';
 import type { UserProfile } from '@/types/mypage';
 import { X } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
+    Image,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -19,14 +20,15 @@ import {
 type Props = {
   visible: boolean;
   profile: UserProfile;
-  onSave: (updated: Pick<UserProfile, 'nickname' | 'bio' | 'avatarEmoji'>) => void;
+  onSave: (updated: Pick<UserProfile, 'nickname' | 'bio' | 'avatarId'>) => void;
   onClose: () => void;
 };
 
 export default function ProfileEditModal({ visible, profile, onSave, onClose }: Props) {
   const [nickname, setNickname] = useState(profile.nickname);
   const [bio, setBio] = useState(profile.bio);
-  const [selectedEmoji, setSelectedEmoji] = useState(profile.avatarEmoji);
+  const [selectedAvatar, setSelectedAvatar] = useState(profile.avatarId);
+  const selectedAvatarData = AVATAR_OPTIONS.find((avatar) => avatar.id === selectedAvatar);
 
   const slideAnim = useRef(new Animated.Value(600)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -35,7 +37,7 @@ export default function ProfileEditModal({ visible, profile, onSave, onClose }: 
     if (visible) {
       setNickname(profile.nickname);
       setBio(profile.bio);
-      setSelectedEmoji(profile.avatarEmoji);
+      setSelectedAvatar(profile.avatarId);
       Animated.parallel([
         Animated.spring(slideAnim, {
           toValue: 0,
@@ -60,7 +62,7 @@ export default function ProfileEditModal({ visible, profile, onSave, onClose }: 
 
   const handleSave = () => {
     if (!nickname.trim()) return;
-    onSave({ nickname: nickname.trim(), bio: bio.trim(), avatarEmoji: selectedEmoji });
+    onSave({ nickname: nickname.trim(), bio: bio.trim(), avatarId: selectedAvatar });
     handleClose();
   };
 
@@ -144,28 +146,49 @@ export default function ProfileEditModal({ visible, profile, onSave, onClose }: 
                         justifyContent: 'center',
                       }}
                     >
-                      <Text style={{ fontSize: 40 }}>{selectedEmoji}</Text>
+                      {selectedAvatarData && (
+                        <Image
+                          source={selectedAvatarData.source}
+                          style={{
+                            width: 48,
+                            height: 55,
+                          }}
+                        />
+                      )}
                     </View>
                   </View>
-                  {/* Emoji grid */}
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                    {AVATAR_EMOJI_OPTIONS.map((emoji) => (
+                  {/* Avatar grid */}
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      gap: 10,
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {AVATAR_OPTIONS.map((avatar) => (
                       <TouchableOpacity
-                        key={emoji}
-                        onPress={() => setSelectedEmoji(emoji)}
+                        key={avatar.id}
+                        onPress={() => setSelectedAvatar(avatar.id)}
                         activeOpacity={0.7}
                         style={{
-                          width: 52,
-                          height: 52,
+                          width: 58,
+                          height: 58,
                           borderRadius: 14,
-                          backgroundColor: selectedEmoji === emoji ? '#FFF8D6' : '#F9F9F9',
-                          borderWidth: selectedEmoji === emoji ? 2 : 1,
-                          borderColor: selectedEmoji === emoji ? '#FFDC53' : '#F0EEEC',
+                          backgroundColor: selectedAvatar === avatar.id ? '#FFF8D6' : '#F9F9F9',
+                          borderWidth: selectedAvatar === avatar.id ? 2 : 1,
+                          borderColor: selectedAvatar === avatar.id ? '#FFDC53' : '#F0EEEC',
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}
                       >
-                        <Text style={{ fontSize: 26 }}>{emoji}</Text>
+                        <Image
+                          source={avatar.source}
+                          style={{
+                            width: 43,
+                            height: 50,
+                          }}
+                        />
                       </TouchableOpacity>
                     ))}
                   </View>

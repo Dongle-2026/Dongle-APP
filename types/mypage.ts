@@ -4,7 +4,7 @@ export type UserProfile = {
   id: string;
   nickname: string;
   bio: string;
-  avatarEmoji: string; // 이모지 아바타
+  avatarId: string;
   oauthProvider: 'kakao' | 'google' | 'apple';
   joinedAt: string;
 };
