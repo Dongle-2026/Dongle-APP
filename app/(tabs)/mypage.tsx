@@ -85,7 +85,7 @@ export default function MypageScreen() {
     <SafeAreaView edges={['top', 'left', 'right']} className="bg-mono-100">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 110 }}
       >
         {/* ── 상단 헤더바 ── */}
         <View
