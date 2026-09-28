@@ -348,7 +348,7 @@ export default function SearchScreen() {
             {!isSearching ? (
               <TouchableOpacity onPress={enterSearch} activeOpacity={1} style={{ flex: 1 }}>
                 <Text style={{ fontSize: 15, color: C.ink3, fontWeight: '500' }}>
-                  지금 주목할 소식
+                  궁금한 소식을 찾아보세요
                 </Text>
               </TouchableOpacity>
             ) : (
@@ -358,7 +358,7 @@ export default function SearchScreen() {
                 value={query}
                 onChangeText={setQuery}
                 onSubmitEditing={() => executeSearch(query)}
-                placeholder="지금 주목할 소식"
+                placeholder="궁금한 소식을 찾아보세요"
                 placeholderTextColor={C.ink3}
                 returnKeyType="search"
                 style={{
@@ -475,7 +475,7 @@ export default function SearchScreen() {
          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <Animated.View
         pointerEvents={isSearching ? 'none' : 'auto'}
-        style={{ flex: 1, opacity: gridFade, backgroundColor: C.ink }}
+        style={{ flex: 1, opacity: gridFade, backgroundColor: C.bg }}
       >
         <View style={{ backgroundColor: C.bg }}>
           <View
@@ -494,7 +494,7 @@ export default function SearchScreen() {
                 height: 32,
               }}
             />
-            <Text style={{ fontSize: 18, fontWeight: '800', color: C.ink }}>실시간 트렌드</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: C.ink }}>지금 주목할 소식</Text>
 
             {/* <View
             style={{
@@ -525,8 +525,7 @@ export default function SearchScreen() {
           scrollEnabled={false}
           contentContainerStyle={{
             paddingHorizontal: 12,
-            backgroundColor: C.ink,
-            paddingVertical: 16,
+            backgroundColor: C.bg,
           }}
           columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
           renderItem={({ item }) => (
@@ -542,12 +541,12 @@ export default function SearchScreen() {
           )}
           ListEmptyComponent={
             <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-              <Search color={'white'} size={28} />
+              <Search color={C.ink} size={32} />
               <Text
                 style={{
                   fontSize: 14,
                   fontWeight: '700',
-                  color: C.bg,
+                  color: C.ink,
                   marginTop: 16,
                   marginBottom: 8,
                 }}
