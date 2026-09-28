@@ -1,16 +1,12 @@
-import NewsDetail from '@/components/news/news-detail';
 import NewsPost from '@/components/news/news-post';
+import { useNewsDetail } from '@/context/NewsDetailContext';
 import { newsService } from '@/services/newsService';
-import { CardNews } from '@/types';
-import { useNavigation } from 'expo-router';
-import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import type { CardNews } from '@/types';
+import type { RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Image, RefreshControl, Text, View } from 'react-native';
 
-type SelectedNews = {
-  id: string;
-  image: string;
-  keyword: string;
-};
+// ─── 개별 뉴스 아이템 ─────────────────────────────────────────────────────────
 
 function NewsItem({
   item,
@@ -28,7 +24,11 @@ function NewsItem({
   );
 }
 
+// ─── HomeScreen ───────────────────────────────────────────────────────────────
+
 export default function HomeScreen() {
+  const { open } = useNewsDetail(); // ← context에서 open 함수만 가져옴
+
   const [news, setNews] = useState<CardNews[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,44 +40,24 @@ export default function HomeScreen() {
   const lastScrollY = useRef(0);
   const headerTranslateY = useRef(new Animated.Value(0)).current;
 
-  const [selectedItem, setSelectedItem] = useState<SelectedNews | null>(null);
-  const [selectedCardRef, setSelectedCardRef] = useState<RefObject<View | null> | null>(null);
-
-  const navigation = useNavigation();
-
-  useEffect(() => {
-    navigation.setOptions({
-      tabBarStyle: selectedItem ? { display: 'none' } : undefined,
-    });
-  }, [navigation, selectedItem]);
-
+  // ── 카드 탭 → context.open 호출 ──────────────────────────────────────────
   const handleCardPress = (item: CardNews, cardRef: RefObject<View | null>) => {
     if (!item.image || !item.title) return;
-
-    setSelectedItem({
-      id: item.id,
-      image: item.image,
-      keyword: item.title,
+    open({
+      newsId: item.id,
+      thumbnail: item.image,
+      title: item.title,
+      cardRef,
     });
-    setSelectedCardRef(cardRef);
   };
 
-  const handleClose = () => {
-    setSelectedItem(null);
-    setSelectedCardRef(null);
-  };
-
-  // 초기 뉴스 로드
-  const fetchNews = useCallback(async (pageNum: number = 1, isRefresh: boolean = false) => {
+  // ── 데이터 로드 ──────────────────────────────────────────────────────────
+  const fetchNews = useCallback(async (pageNum = 1, isRefresh = false) => {
     try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else if (pageNum === 1) {
-        setLoading(true);
-      }
+      if (isRefresh) setRefreshing(true);
+      else if (pageNum === 1) setLoading(true);
 
       const response = await newsService.getLatestNews(pageNum, 10);
-
       const data = response.data ?? [];
 
       if (data.length > 0) {
@@ -88,49 +68,33 @@ export default function HomeScreen() {
           setNews((prev) => [...prev, ...data]);
           setPage(pageNum + 1);
         }
-
-        // 받은 데이터가 limit 미만이면 더 이상 데이터 없음
         setHasMore(data.length === 10);
         setError(null);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '뉴스를 불러올 수 없습니다.';
-      setError(errorMessage);
-      console.error('뉴스 로드 에러:', err);
+      setError(err instanceof Error ? err.message : '뉴스를 불러올 수 없습니다.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  // 컴포넌트 마운트 시 초기 데이터 로드
   useEffect(() => {
     fetchNews(1);
   }, [fetchNews]);
 
-  // 무한 스크롤 핸들러
   const handleEndReached = useCallback(() => {
-    if (!loading && !refreshing && hasMore) {
-      fetchNews(page);
-    }
+    if (!loading && !refreshing && hasMore) fetchNews(page);
   }, [page, loading, refreshing, hasMore, fetchNews]);
 
-  // 새로고침 핸들러
-  const handleRefresh = useCallback(() => {
-    fetchNews(1, true);
-  }, [fetchNews]);
+  const handleRefresh = useCallback(() => fetchNews(1, true), [fetchNews]);
 
+  // ── 헤더 hide-on-scroll ───────────────────────────────────────────────────
   const handleScroll = (event: { nativeEvent: { contentOffset: { y: number } } }) => {
     const y = Math.max(0, event.nativeEvent.contentOffset.y);
-    const previousY = lastScrollY.current;
-    const diff = y - previousY;
-
-    if (y <= 0) {
-      headerTranslateY.setValue(0);
-    } else if (diff > 5) {
-      headerTranslateY.setValue(-100);
-    }
-
+    const diff = y - lastScrollY.current;
+    if (y <= 0) headerTranslateY.setValue(0);
+    else if (diff > 5) headerTranslateY.setValue(-100);
     lastScrollY.current = y;
   };
 
@@ -140,51 +104,32 @@ export default function HomeScreen() {
     extrapolate: 'clamp',
   });
 
+  // ── 렌더 헬퍼 ────────────────────────────────────────────────────────────
   const renderItem = ({ item }: { item: CardNews }) => (
     <NewsItem item={item} onPress={handleCardPress} />
   );
 
-  const renderNewsDetail = () => {
-    if (!selectedItem || !selectedCardRef) return null;
-
-    return (
-      <NewsDetail
-        newsId={selectedItem.id}
-        thumbnail={selectedItem.image}
-        title={selectedItem.keyword}
-        cardRef={selectedCardRef}
-        onClose={handleClose}
-      />
-    );
-  };
-
-  const renderFooter = () => {
-    if (!hasMore) return null;
-    return (
+  const renderFooter = () =>
+    hasMore ? (
       <View className="py-6 flex-row justify-center bg-gray-50">
         <ActivityIndicator size="large" color="#666" />
       </View>
-    );
-  };
+    ) : null;
 
-  const renderEmptyState = () => {
-    if (loading) {
+  const renderEmpty = () => {
+    if (loading)
       return (
         <View className="flex-1 justify-center items-center bg-white">
           <ActivityIndicator size="large" color="#666" />
         </View>
       );
-    }
-
-    if (error) {
+    if (error)
       return (
         <View className="flex-1 justify-center items-center bg-white px-4">
           <Text className="text-gray-800 text-center text-lg mb-2">문제가 발생했습니다</Text>
           <Text className="text-gray-500 text-center text-sm">{error}</Text>
         </View>
       );
-    }
-
     return (
       <View className="flex-1 justify-center items-center bg-white">
         <Text className="text-gray-500">불러올 뉴스가 없습니다.</Text>
@@ -194,6 +139,7 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-mono-100">
+      {/* 스크롤에 반응하는 상단 헤더 */}
       <Animated.View
         style={{
           position: 'absolute',
@@ -216,6 +162,7 @@ export default function HomeScreen() {
           resizeMode="contain"
         />
       </Animated.View>
+
       <Animated.FlatList
         data={news}
         renderItem={renderItem}
@@ -223,7 +170,7 @@ export default function HomeScreen() {
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
-        ListEmptyComponent={renderEmptyState}
+        ListEmptyComponent={renderEmpty}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -239,7 +186,8 @@ export default function HomeScreen() {
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingTop: 120 }}
       />
-      {renderNewsDetail()}
+
+      {/* ✅ NewsDetail은 여기서 렌더하지 않음 → _layout.tsx의 Portal이 처리 */}
     </View>
   );
 }

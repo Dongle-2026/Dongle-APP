@@ -1,15 +1,17 @@
-import NewsDetail from '@/components/news/news-detail';
+import { useNewsDetail } from '@/context/NewsDetailContext';
 import { KEYWORD_NEWS } from '@/utils/mock';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import type { RefObject } from 'react';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Dimensions, FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width: screenWidth } = Dimensions.get('window');
 const cardWidth = (screenWidth - 32 - 8) / 2;
+
+// ─── 그리드 카드 ──────────────────────────────────────────────────────────────
 
 function NewsGridCard({
   item,
@@ -49,24 +51,26 @@ function NewsGridCard({
   );
 }
 
+// ─── 뉴스 리스트 스크린 ───────────────────────────────────────────────────────
+
 export default function NewsListScreen() {
-  const [selectedItem, setSelectedItem] = useState<(typeof KEYWORD_NEWS)[number] | null>(null);
-  const [selectedCardRef, setSelectedCardRef] = useState<RefObject<View | null> | null>(null);
+  const { open } = useNewsDetail(); // ← context open 사용
 
   const handleCardPress = (
     item: (typeof KEYWORD_NEWS)[number],
     cardRef: RefObject<View | null>
   ) => {
-    setSelectedItem(item);
-    setSelectedCardRef(cardRef);
-  };
-
-  const handleClose = () => {
-    setSelectedItem(null);
-    setSelectedCardRef(null);
+    // 로컬 state 필요 없음 → context가 처리
+    open({
+      newsId: item.id,
+      thumbnail: item.image,
+      title: item.keyword,
+      cardRef,
+    });
   };
 
   return (
+    // ✅ NewsDetail을 여기서 렌더하지 않음 → _layout.tsx 포탈이 처리
     <View className="flex-1 bg-mono-100">
       <SafeAreaView className="flex-1">
         <TouchableOpacity onPress={() => router.back()} className="flex-row items-center gap-2 p-4">
@@ -84,16 +88,6 @@ export default function NewsListScreen() {
           renderItem={({ item }) => <NewsGridCard item={item} onPress={handleCardPress} />}
         />
       </SafeAreaView>
-
-      {selectedItem && selectedCardRef && (
-        <NewsDetail
-          newsId={selectedItem.id}
-          thumbnail={selectedItem.image}
-          title={selectedItem.keyword}
-          cardRef={selectedCardRef}
-          onClose={handleClose}
-        />
-      )}
     </View>
   );
 }

@@ -143,121 +143,8 @@ export default function NewsBody({ data }: Props) {
       {/* ── Divider ── */}
       <View style={{ height: 8, backgroundColor: '#F6F6F8' }} />
 
-      {/* ── Vocabulary section ── */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 8 }}>
-        <TouchableOpacity
-          onPress={() => setShowVocab((p) => !p)}
-          activeOpacity={0.8}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: showVocab ? 16 : 0,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text
-              style={{ fontSize: 17, fontWeight: '800', color: '#22272B', letterSpacing: -0.4 }}
-            >
-              핵심 용어 모음
-            </Text>
-            <View
-              style={{
-                backgroundColor: '#22272B',
-                borderRadius: 10,
-                paddingHorizontal: 7,
-                paddingVertical: 2,
-              }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: '700', color: '#FFDC53' }}>
-                {data.terms.length}
-              </Text>
-            </View>
-          </View>
-          {showVocab ? (
-            <ChevronUp size={18} color="#898989" />
-          ) : (
-            <ChevronDown size={18} color="#898989" />
-          )}
-        </TouchableOpacity>
-
-        {showVocab && (
-          <View style={{ gap: 8 }}>
-            {data.terms.map((term) => {
-              const isSaved = savedTerms.has(term.term);
-              return (
-                <TouchableOpacity
-                  key={term.term}
-                  onPress={() => setActiveTerm(term)}
-                  activeOpacity={0.8}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'flex-start',
-                    gap: 12,
-                    backgroundColor: '#F9F9F9',
-                    borderRadius: 14,
-                    padding: 14,
-                    borderWidth: 1,
-                    borderColor: isSaved ? '#FFDC53' : '#F0EEEC',
-                  }}
-                >
-                  <View
-                    style={{
-                      backgroundColor: isSaved ? '#FFDC53' : '#F0EEEC',
-                      borderRadius: 8,
-                      width: 32,
-                      height: 32,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <BookOpen size={15} color={isSaved ? '#22272B' : '#898989'} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 8,
-                        marginBottom: 3,
-                      }}
-                    >
-                      <Text style={{ fontSize: 14, fontWeight: '700', color: '#22272B' }}>
-                        {term.term}
-                      </Text>
-                      <View
-                        style={{
-                          backgroundColor: '#EAF6F9',
-                          borderRadius: 6,
-                          paddingHorizontal: 6,
-                          paddingVertical: 1,
-                        }}
-                      >
-                        <Text style={{ fontSize: 10, color: '#0e7fa3', fontWeight: '600' }}>
-                          {term.category}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text
-                      style={{ fontSize: 12, color: '#898989', lineHeight: 18 }}
-                      numberOfLines={2}
-                    >
-                      {term.definition}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
-      </View>
-
-      {/* ── Divider ── */}
-      <View style={{ height: 8, backgroundColor: '#F6F6F8', marginTop: 20 }} />
-
       {/* ── Quiz section ── */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 24 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 20 }}>
         <TouchableOpacity
           onPress={() => setShowQuiz((p) => !p)}
           activeOpacity={0.8}
@@ -382,6 +269,119 @@ export default function NewsBody({ data }: Props) {
                 totalCount={data.quizzes.length}
               />
             )}
+          </View>
+        )}
+      </View>
+
+      {/* ── Divider ── */}
+      <View style={{ height: 8, backgroundColor: '#F6F6F8', marginTop: 20 }} />
+
+      {/* ── Vocabulary section ── */}
+      <View style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 8 }}>
+        <TouchableOpacity
+          onPress={() => setShowVocab((p) => !p)}
+          activeOpacity={0.8}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: showVocab ? 16 : 0,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text
+              style={{ fontSize: 17, fontWeight: '800', color: '#22272B', letterSpacing: -0.4 }}
+            >
+              핵심 용어 모음
+            </Text>
+            <View
+              style={{
+                backgroundColor: '#22272B',
+                borderRadius: 10,
+                paddingHorizontal: 7,
+                paddingVertical: 2,
+              }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '700', color: '#FFDC53' }}>
+                {data.terms.length}
+              </Text>
+            </View>
+          </View>
+          {showVocab ? (
+            <ChevronUp size={18} color="#898989" />
+          ) : (
+            <ChevronDown size={18} color="#898989" />
+          )}
+        </TouchableOpacity>
+
+        {showVocab && (
+          <View style={{ gap: 8 }}>
+            {data.terms.map((term) => {
+              const isSaved = savedTerms.has(term.term);
+              return (
+                <TouchableOpacity
+                  key={term.term}
+                  onPress={() => setActiveTerm(term)}
+                  activeOpacity={0.8}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    gap: 12,
+                    backgroundColor: '#F9F9F9',
+                    borderRadius: 14,
+                    padding: 14,
+                    borderWidth: 1,
+                    borderColor: isSaved ? '#FFDC53' : '#F0EEEC',
+                  }}
+                >
+                  <View
+                    style={{
+                      backgroundColor: isSaved ? '#FFDC53' : '#F0EEEC',
+                      borderRadius: 8,
+                      width: 32,
+                      height: 32,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <BookOpen size={15} color={isSaved ? '#22272B' : '#898989'} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 8,
+                        marginBottom: 3,
+                      }}
+                    >
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: '#22272B' }}>
+                        {term.term}
+                      </Text>
+                      <View
+                        style={{
+                          backgroundColor: '#EAF6F9',
+                          borderRadius: 6,
+                          paddingHorizontal: 6,
+                          paddingVertical: 1,
+                        }}
+                      >
+                        <Text style={{ fontSize: 10, color: '#0e7fa3', fontWeight: '600' }}>
+                          {term.category}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text
+                      style={{ fontSize: 12, color: '#898989', lineHeight: 18 }}
+                      numberOfLines={2}
+                    >
+                      {term.definition}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
       </View>
