@@ -44,12 +44,8 @@ export default function HighlightText({ text, terms, onTermPress, style }: Props
             onPress={() => onTermPress(seg.term!)}
             style={{
               backgroundColor: 'rgba(255, 220, 83, 0.35)',
-              borderRadius: 3,
               color: '#22272B',
               fontWeight: '600',
-              textDecorationLine: 'underline',
-              textDecorationColor: '#FFDC53',
-              textDecorationStyle: 'solid',
             }}
           >
             {seg.text}
