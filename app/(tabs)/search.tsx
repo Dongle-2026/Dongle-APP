@@ -315,85 +315,107 @@ export default function SearchScreen() {
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           검색바 — 항상 렌더, 절대 사라지지 않음
          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+
       <View
         style={{
-          padding: 16,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
           zIndex: 20,
           backgroundColor: C.bg,
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          {/* 검색 입력창 */}
           <View
             style={{
               flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: C.surf,
-              borderRadius: 14,
-              padding: 14,
-              gap: 10,
+              height: 52,
+              borderRadius: 26,
+              overflow: 'hidden',
+              position: 'relative',
               borderWidth: 1,
-              borderColor: C.border2,
+              borderColor: 'rgba(255,255,255,0.7)',
+              backgroundColor: 'rgba(255,255,255,0.88)',
               shadowColor: '#000',
-              shadowOpacity: 0.02,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 2 },
-              elevation: isSearching ? 2 : 1,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.06,
+              shadowRadius: 12,
+              elevation: 4,
             }}
           >
-            <Search size={17} color={isSearching ? C.ink : C.ink2} strokeWidth={2.2} />
-
-            {/* 비활성: 탭하면 검색모드 진입 */}
             {!isSearching ? (
-              <TouchableOpacity onPress={enterSearch} activeOpacity={1} style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, color: C.ink3, fontWeight: '500' }}>
+              <TouchableOpacity
+                onPress={enterSearch}
+                activeOpacity={0.8}
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 18,
+                  gap: 10,
+                }}
+              >
+                <Search size={18} color={C.ink2} strokeWidth={2} />
+                <Text
+                  style={{
+                    flex: 1,
+                    fontSize: 14,
+                    color: C.ink3,
+                    fontWeight: '500',
+                  }}
+                >
                   궁금한 소식을 찾아보세요
                 </Text>
               </TouchableOpacity>
             ) : (
-              /* 활성: 실제 TextInput */
-              <TextInput
-                ref={inputRef}
-                value={query}
-                onChangeText={setQuery}
-                onSubmitEditing={() => executeSearch(query)}
-                placeholder="궁금한 소식을 찾아보세요"
-                placeholderTextColor={C.ink3}
-                returnKeyType="search"
+              <View
                 style={{
                   flex: 1,
-                  fontSize: 15,
-                  color: C.ink,
-                  fontWeight: '500',
-                  paddingVertical: 0,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 18,
+                  gap: 10,
                 }}
-              />
-            )}
-
-            {/* 지우기 버튼 */}
-            {isSearching && query.length > 0 && (
-              <TouchableOpacity onPress={() => setQuery('')} activeOpacity={0.7}>
-                <View
+              >
+                <Search size={18} color={C.ink} strokeWidth={2} />
+                <TextInput
+                  ref={inputRef}
+                  value={query}
+                  onChangeText={setQuery}
+                  onSubmitEditing={() => executeSearch(query)}
+                  placeholder="궁금한 소식을 찾아보세요"
+                  placeholderTextColor={C.ink3}
+                  returnKeyType="search"
                   style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 10,
-                    backgroundColor: C.bg,
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    flex: 1,
+                    fontSize: 14,
+                    color: C.ink,
+                    fontWeight: '500',
+                    paddingVertical: 0,
                   }}
-                >
-                  <X size={12} color={C.ink2} strokeWidth={2.5} />
-                </View>
-              </TouchableOpacity>
+                />
+                {query.length > 0 && (
+                  <TouchableOpacity onPress={() => setQuery('')} activeOpacity={0.7}>
+                    <View
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: C.bg,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <X size={12} color={C.ink2} strokeWidth={2.5} />
+                    </View>
+                  </TouchableOpacity>
+                )}
+              </View>
             )}
           </View>
 
-          {/* 취소 버튼 */}
           {isSearching && (
             <TouchableOpacity onPress={exitSearch} activeOpacity={0.7}>
-              <Text style={{ fontSize: 14, fontWeight: '500', color: C.ink }}>취소</Text>
+              <Text style={{ fontSize: 14, fontWeight: '500', color: C.ink2 }}>취소</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -484,7 +506,7 @@ export default function SearchScreen() {
               alignItems: 'center',
               gap: 7,
               paddingHorizontal: 16,
-              paddingTop: 4,
+              paddingTop: 12,
             }}
           >
             <Image
