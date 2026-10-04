@@ -80,6 +80,7 @@ function RootLayoutNav() {
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="news-list" options={{ headerShown: false }} />
+          <Stack.Screen name="glass-demo" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
       <NewsDetailPortal />
