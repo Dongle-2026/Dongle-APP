@@ -69,7 +69,7 @@ function MiniNewsCard({ item }: { item: (typeof mockReadHistory)[number] }) {
 
 export default function SavedScreen() {
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} className="bg-mono-100">
+    <SafeAreaView edges={['top', 'left', 'right']} style={{ backgroundColor: '#FFF9EC' }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}

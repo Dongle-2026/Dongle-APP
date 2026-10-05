@@ -88,7 +88,7 @@ export default function NewsListScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F6F6F8' }}>
+    <View style={{ flex: 1, backgroundColor: '#FFF9EC' }}>
       <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
         {/* 헤더 */}
         <View

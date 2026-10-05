@@ -24,7 +24,7 @@ const C = {
   ink2: '#898989',
   ink3: '#D9D9D9',
   point: '#FFDC53',
-  bg: '#F6F6F8',
+  bg: '#FFF9EC',
   surf: '#FFFFFF',
   border: '#F0EEEC',
   border2: '#E8E4E0',
