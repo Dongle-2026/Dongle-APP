@@ -83,59 +83,66 @@ export const CARD_NEWS = [
 export const KEYWORD_NEWS = [
   {
     id: '1',
-    keyword: 'AI 기술의 발전과 미래 전망',
+    keyword: '청년미래적금',
     image:
-      'https://images.unsplash.com/photo-1581091870620-3c7e5f6b8f4d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
-    category: 'all',
+      'https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'tech',
   },
   {
     id: '2',
     keyword: '에너지',
     image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto  =format&fit=crop&w=800&q=80',
-    category: 'all',
+      'https://images.unsplash.com/photo-1466611653911-95081537e5b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'environment',
   },
   {
     id: '3',
-    keyword: '스페이스x',
+    keyword: '스페이스X',
     image:
-      'https://images.unsplash.com/photo-1581091870620-3c7e5f6b8f4d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'medical',
   },
   {
     id: '4',
-    keyword: '인스페이스x',
+    keyword: '전기차 배터리',
     image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto              =format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1558449041-6203cd03d0d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'mobility',
   },
   {
     id: '5',
-    keyword: '청년 도약 계좌',
+    keyword: '청년 월세 지원',
     image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto              =format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'finance',
   },
   {
     id: '6',
-    keyword: '인공지능과 의료 혁신',
+    keyword: 'SK 하이닉스',
     image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto              =format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1573164713988-8665fc963095?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'society',
   },
   {
     id: '7',
-    keyword: '인공지능과 의료 혁신',
+    keyword: '로보틱스',
     image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto              =format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'tech',
   },
   {
     id: '8',
-    keyword: '인공지능과 의료 혁신',
+    keyword: '글로벌 공급망',
     image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto              =format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'economy',
   },
   {
     id: '9',
-    keyword: '인공지능과 의료 혁신',
+    keyword: '메타버스',
     image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto              =format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'tech',
   },
 ];
 
