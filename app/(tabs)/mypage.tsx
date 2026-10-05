@@ -1,4 +1,4 @@
-import Section from '@/components/common/Section';
+import { glass, GlassCard, GlassChip, GlassIconButton } from '@/components/common/glass';
 import SectionHeader from '@/components/common/SectionHeader';
 import ActivityHeatmap from '@/components/mypage/ActivityHeatmap';
 import ProfileEditModal from '@/components/mypage/ProfileEditModal';
@@ -14,7 +14,7 @@ import {
 import type { NotificationSetting, UserProfile } from '@/types/mypage';
 import { Flame, LucideIcon, Newspaper, Settings, Share, Trophy } from 'lucide-react-native';
 import { useState } from 'react';
-import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // ─── 작은 유틸 컴포넌트들 ────────────────────────────────────────────────────
@@ -34,30 +34,28 @@ function StatPill({
     <View
       style={{
         flex: 1,
-        backgroundColor: accent ? '#22272B' : '#F9F9F9',
-        borderRadius: 16,
+        backgroundColor: accent ? glass.ink : glass.inkFaint,
+        borderRadius: 18,
         padding: 14,
         alignItems: 'center',
         gap: 4,
       }}
     >
-      <Icon size={16} color={accent ? '#FFDC53' : '#22272B'} />
-
+      <Icon size={16} color={accent ? '#FFDC53' : glass.ink} />
       <Text
         style={{
           fontSize: 18,
           fontWeight: '800',
-          color: accent ? '#FFDC53' : '#22272B',
+          color: accent ? '#FFDC53' : glass.ink,
           letterSpacing: -0.5,
         }}
       >
         {value}
       </Text>
-
       <Text
         style={{
           fontSize: 11,
-          color: '#898989',
+          color: accent ? 'rgba(255,255,255,0.7)' : glass.inkMuted,
           fontWeight: '600',
         }}
       >
@@ -66,7 +64,6 @@ function StatPill({
     </View>
   );
 }
-
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 export default function MypageScreen() {
@@ -85,82 +82,50 @@ export default function MypageScreen() {
     <SafeAreaView edges={['top', 'left', 'right']} style={{ backgroundColor: '#FFF9EC' }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 110 }}
+        contentContainerStyle={{ paddingBottom: 110, gap: 16 }}
       >
         {/* ── 상단 헤더바 ── */}
+
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'flex-end',
+            justifyContent: 'space-between',
             paddingHorizontal: 20,
-            paddingTop: 8,
             paddingBottom: 4,
             gap: 8,
           }}
         >
-          <TouchableOpacity
-            onPress={() => {}}
-            activeOpacity={0.7}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 12,
-              backgroundColor: '#fff',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 1,
-              borderColor: '#F0EEEC',
-            }}
-          >
-            <Share size={18} color="#898989" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setShowSettings(true)}
-            activeOpacity={0.7}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 12,
-              backgroundColor: '#fff',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 1,
-              borderColor: '#F0EEEC',
-            }}
-          >
-            <Settings size={18} color="#898989" />
-          </TouchableOpacity>
+          <Text className="text-[32px]">마이페이지</Text>
+          <View className="flex-row gap-2">
+            <GlassIconButton icon={Share} label="공유" size={40} onPress={() => {}} />
+            <GlassIconButton
+              icon={Settings}
+              label="설정"
+              size={40}
+              onPress={() => setShowSettings(true)}
+            />
+          </View>
         </View>
 
         {/* ── 프로필 카드 ── */}
-        <Section>
-          {/* 아바타 + 기본 정보 */}
+
+        <GlassCard style={{ paddingHorizontal: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 16 }}>
-            {/* 아바타 */}
             <View
               style={{
                 width: 72,
                 height: 72,
-                borderRadius: 18,
-                borderWidth: 1.5,
-                borderColor: '#F0EEEC',
+                borderRadius: 22,
+                backgroundColor: glass.inkFaint,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
               {selectedAvatar && (
-                <Image
-                  source={selectedAvatar.source}
-                  style={{
-                    width: 48,
-                    height: 55,
-                  }}
-                />
+                <Image source={selectedAvatar.source} style={{ width: 48, height: 55 }} />
               )}
             </View>
-
-            {/* 닉네임 + 소개 + 프로필 편집 버튼 */}
             <View style={{ flex: 1 }}>
               <View
                 style={{
@@ -173,44 +138,20 @@ export default function MypageScreen() {
                   style={{
                     fontSize: 20,
                     fontWeight: '800',
-                    color: '#22272B',
+                    color: glass.ink,
                     letterSpacing: -0.5,
                   }}
                 >
                   {profile.nickname}
                 </Text>
-                <TouchableOpacity
-                  onPress={() => setShowEditModal(true)}
-                  activeOpacity={0.7}
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 5,
-                    borderRadius: 20,
-                    backgroundColor: '#F6F6F8',
-                    borderWidth: 1,
-                    borderColor: '#F0EEEC',
-                  }}
-                >
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#898989' }}>편집</Text>
-                </TouchableOpacity>
+                <GlassChip label="편집" onPress={() => setShowEditModal(true)} />
               </View>
-
-              <Text
-                style={{
-                  fontSize: 13,
-                  color: '#898989',
-                  marginTop: 4,
-                  lineHeight: 19,
-                }}
-              >
+              <Text style={{ fontSize: 13, color: glass.inkMuted, marginTop: 4, lineHeight: 19 }}>
                 {profile.bio || '소개를 작성해보세요'}
               </Text>
             </View>
           </View>
-
-          {/* 구분선 */}
-          <View style={{ height: 1, backgroundColor: '#F6F6F8', marginVertical: 16 }} />
-
+          <View style={{ height: 1, backgroundColor: glass.inkFaint, marginVertical: 16 }} />
           {/* 핵심 스탯 4개 */}
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <StatPill
@@ -226,10 +167,10 @@ export default function MypageScreen() {
             />
             <StatPill icon={Trophy} label="푼 퀴즈" value={`${mockLearningStats.totalQuizCount}`} />
           </View>
-        </Section>
+        </GlassCard>
 
         {/* ── 활동 히트맵 ── */}
-        <Section>
+        <GlassCard style={{ paddingHorizontal: 16 }}>
           <SectionHeader title="내 꿀단지" />
           <View className="flex-row items-center gap-2">
             <Text
@@ -246,11 +187,11 @@ export default function MypageScreen() {
             <Text className="text-mono-500 text-sm">모았어요!</Text>
           </View>
           <ActivityHeatmap data={mockActivityData} />
-        </Section>
+        </GlassCard>
 
         {/* ── 내 활동 ── */}
 
-        <Section>
+        <GlassCard style={{ paddingHorizontal: 16 }}>
           <SectionHeader title="내 활동" />
 
           {/* 퀴즈 정답률 */}
@@ -419,15 +360,15 @@ export default function MypageScreen() {
               </View>
             </View>
           </View>
-        </Section>
+        </GlassCard>
 
         {/* ── 배지 ── */}
-        <Section>
+        <GlassCard style={{ paddingHorizontal: 16 }}>
           <SectionHeader title="획득한 배지" />
           <Text style={{ fontSize: 14, fontWeight: '500', color: '#D9D9D9', marginBottom: 10 }}>
             준비 중이에요. 조금만 기다려 주세요!
           </Text>
-        </Section>
+        </GlassCard>
       </ScrollView>
 
       {/* ── Modals ── */}
