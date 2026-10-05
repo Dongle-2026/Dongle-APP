@@ -1,12 +1,21 @@
+import HomeHeader from '@/components/home/HomeHeader';
 import NewsPost from '@/components/news/news-post';
 import { useNewsDetail } from '@/context/NewsDetailContext';
 import { newsService } from '@/services/newsService';
 import type { CardNews } from '@/types';
+import { useNavigation } from 'expo-router';
 import type { RefObject } from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Image, RefreshControl, Text, View } from 'react-native';
-
-// ─── 개별 뉴스 아이템 ─────────────────────────────────────────────────────────
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'; // [NEW] useMemo
+import {
+  ActivityIndicator,
+  Animated,
+  type FlatList,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Text,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function NewsItem({
   item,
@@ -16,7 +25,6 @@ function NewsItem({
   onPress: (item: CardNews, cardRef: RefObject<View | null>) => void;
 }) {
   const cardRef = useRef<View>(null);
-
   return (
     <View ref={cardRef} collapsable={false}>
       <NewsPost news={item} isPress={true} onPress={() => onPress(item, cardRef)} />
@@ -24,10 +32,10 @@ function NewsItem({
   );
 }
 
-// ─── HomeScreen ───────────────────────────────────────────────────────────────
-
 export default function HomeScreen() {
-  const { open } = useNewsDetail(); // ← context에서 open 함수만 가져옴
+  const { open } = useNewsDetail();
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation(); // [NEW]
 
   const [news, setNews] = useState<CardNews[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,22 +44,11 @@ export default function HomeScreen() {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const lastScrollY = useRef(0);
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
-
-  // ── 카드 탭 → context.open 호출 ──────────────────────────────────────────
   const handleCardPress = (item: CardNews, cardRef: RefObject<View | null>) => {
     if (!item.image || !item.title) return;
-    open({
-      newsId: item.id,
-      thumbnail: item.image,
-      title: item.title,
-      cardRef,
-    });
+    open({ newsId: item.id, thumbnail: item.image, title: item.title, cardRef });
   };
 
-  // ── 데이터 로드 ──────────────────────────────────────────────────────────
   const fetchNews = useCallback(async (pageNum = 1, isRefresh = false) => {
     try {
       if (isRefresh) setRefreshing(true);
@@ -83,111 +80,136 @@ export default function HomeScreen() {
     fetchNews(1);
   }, [fetchNews]);
 
+  const handleRefresh = useCallback(() => fetchNews(1, true), [fetchNews]);
+
   const handleEndReached = useCallback(() => {
     if (!loading && !refreshing && hasMore) fetchNews(page);
   }, [page, loading, refreshing, hasMore, fetchNews]);
 
-  const handleRefresh = useCallback(() => fetchNews(1, true), [fetchNews]);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [headerH, setHeaderH] = useState(160); // onLayout으로 실제 높이로 교체됨
 
-  // ── 헤더 hide-on-scroll ───────────────────────────────────────────────────
-  const handleScroll = (event: { nativeEvent: { contentOffset: { y: number } } }) => {
-    const y = Math.max(0, event.nativeEvent.contentOffset.y);
-    const diff = y - lastScrollY.current;
-    if (y <= 0) headerTranslateY.setValue(0);
-    else if (diff > 5) headerTranslateY.setValue(-100);
-    lastScrollY.current = y;
-  };
+  const headerAnim = useMemo(() => {
+    const h = Math.max(headerH, 1);
+    return {
+      opacity: scrollY.interpolate({
+        inputRange: [0, h * 0.55],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+      }),
+      translateY: scrollY.interpolate({
+        inputRange: [0, h],
+        outputRange: [0, h * 0.75],
+        extrapolate: 'clamp',
+      }),
+    };
+  }, [headerH, scrollY]);
 
-  const headerOpacity = headerTranslateY.interpolate({
-    inputRange: [-100, 0],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
+  // 홈 탭 재클릭 → 최상단 스크롤 → refresh ───────────────────────
+  const listRef = useRef<FlatList<CardNews>>(null);
+  const offsetY = useRef(0);
+  const pendingRefresh = useRef(false);
+  const refreshRef = useRef(handleRefresh);
+  const refreshingRef = useRef(refreshing);
+  refreshRef.current = handleRefresh;
+  refreshingRef.current = refreshing;
 
-  // ── 렌더 헬퍼 ────────────────────────────────────────────────────────────
-  const renderItem = ({ item }: { item: CardNews }) => (
-    <NewsItem item={item} onPress={handleCardPress} />
+  const onScroll = useMemo(
+    () =>
+      Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+        useNativeDriver: true,
+        listener: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+          const y = e.nativeEvent.contentOffset.y;
+          offsetY.current = y;
+          // 최상단 스크롤이 끝나면(예약돼 있을 때) 기존 refresh 로직 실행
+          if (pendingRefresh.current && y <= 1) {
+            pendingRefresh.current = false;
+            refreshRef.current();
+          }
+        },
+      }),
+    [scrollY]
   );
+
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const unsubscribe = (navigation as any).addListener('tabPress', () => {
+      if (!navigation.isFocused() || refreshingRef.current) return; // 다른 탭에서 홈으로 "이동"하는 경우는 제외
+      if (offsetY.current <= 1) {
+        refreshRef.current(); // 이미 최상단이면 바로 refresh
+        return;
+      }
+      pendingRefresh.current = true;
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const renderFooter = () =>
     hasMore ? (
-      <View className="py-6 flex-row justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#666" />
+      <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#898989" />
       </View>
     ) : null;
 
   const renderEmpty = () => {
     if (loading)
       return (
-        <View className="flex-1 justify-center items-center bg-white">
-          <ActivityIndicator size="large" color="#666" />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 }}>
+          <ActivityIndicator size="large" color="#898989" />
         </View>
       );
     if (error)
       return (
-        <View className="flex-1 justify-center items-center bg-white px-4">
-          <Text className="text-gray-800 text-center text-lg mb-2">문제가 발생했습니다</Text>
-          <Text className="text-gray-500 text-center text-sm">{error}</Text>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Text style={{ fontSize: 16, color: '#22272B', fontWeight: '700', marginBottom: 6 }}>
+            문제가 발생했습니다
+          </Text>
+          <Text style={{ fontSize: 13, color: '#898989', textAlign: 'center' }}>{error}</Text>
         </View>
       );
     return (
-      <View className="flex-1 justify-center items-center bg-white">
-        <Text className="text-gray-500">불러올 뉴스가 없습니다.</Text>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 }}>
+        <Text style={{ fontSize: 13, color: '#898989' }}>불러올 뉴스가 없습니다.</Text>
       </View>
     );
   };
 
   return (
-    <View className="flex-1 bg-mono-100">
-      {/* 스크롤에 반응하는 상단 헤더 */}
-      <Animated.View
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 120,
-          zIndex: 10,
-          transform: [{ translateY: headerTranslateY }],
-          opacity: headerOpacity,
-          backgroundColor: '#FFFFFF',
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingTop: 40,
-        }}
-      >
-        <Image
-          source={require('@/assets/images/logo1.png')}
-          style={{ width: 75, height: 20 }}
-          resizeMode="contain"
-        />
-      </Animated.View>
-
+    <View style={{ flex: 1, backgroundColor: '#FFF9EC' }}>
       <Animated.FlatList
+        ref={listRef}
         data={news}
-        renderItem={renderItem}
+        renderItem={({ item }) => <NewsItem item={item} onPress={handleCardPress} />}
         keyExtractor={(item) => item.id}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
+        ListHeaderComponent={
+          <Animated.View
+            onLayout={(e) => setHeaderH(e.nativeEvent.layout.height)}
+            style={{
+              opacity: headerAnim.opacity,
+              transform: [{ translateY: headerAnim.translateY }],
+            }}
+          >
+            <HomeHeader topInset={insets.top} />
+          </Animated.View>
+        }
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            progressViewOffset={250}
-          />
-        }
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        progressViewOffset={insets.top + 8}
         showsVerticalScrollIndicator={false}
-        onScroll={(event) => {
-          scrollY.setValue(event.nativeEvent.contentOffset.y);
-          handleScroll(event);
+        contentContainerStyle={{
+          paddingBottom: 100,
         }}
         scrollEventThrottle={16}
-        contentContainerStyle={{ paddingTop: 120 }}
+        onScroll={onScroll} // [NEW]
+        onScrollBeginDrag={() => {
+          pendingRefresh.current = false;
+        }}
       />
-
-      {/* ✅ NewsDetail은 여기서 렌더하지 않음 → _layout.tsx의 Portal이 처리 */}
     </View>
   );
 }

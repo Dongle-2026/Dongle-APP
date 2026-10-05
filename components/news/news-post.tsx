@@ -2,13 +2,13 @@ import type { CardNews } from '@/types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRef, useState } from 'react';
 import {
-    Dimensions,
-    Image,
-    NativeScrollEvent,
-    NativeSyntheticEvent,
-    ScrollView,
-    Text,
-    View,
+  Dimensions,
+  Image,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  Text,
+  View,
 } from 'react-native';
 
 interface NewsPostProps {
@@ -40,9 +40,9 @@ export default function NewsPost({ news, isPress = false, onPress }: NewsPostPro
   };
 
   return (
-    <View className="h-[480px] bg-mono-100 px-4 py-2 rounded-2xl overflow-hidden">
+    <View className="h-[440px] py-3 px-6">
       <View
-        className="flex-1 rounded-xl overflow-hidden"
+        className="flex-1 rounded-3xl overflow-hidden "
         onLayout={(event) => setCardWidth(event.nativeEvent.layout.width)}
       >
         <Image
