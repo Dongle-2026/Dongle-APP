@@ -3,9 +3,18 @@ import NewsPost from '@/components/news/news-post';
 import { useNewsDetail } from '@/context/NewsDetailContext';
 import { newsService } from '@/services/newsService';
 import type { CardNews } from '@/types';
+import { useNavigation } from 'expo-router';
 import type { RefObject } from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'; // [NEW] useMemo
+import {
+  ActivityIndicator,
+  Animated,
+  type FlatList,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function NewsItem({
@@ -26,6 +35,7 @@ function NewsItem({
 export default function HomeScreen() {
   const { open } = useNewsDetail();
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation(); // [NEW]
 
   const [news, setNews] = useState<CardNews[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,6 +86,65 @@ export default function HomeScreen() {
     if (!loading && !refreshing && hasMore) fetchNews(page);
   }, [page, loading, refreshing, hasMore, fetchNews]);
 
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [headerH, setHeaderH] = useState(160); // onLayout으로 실제 높이로 교체됨
+
+  const headerAnim = useMemo(() => {
+    const h = Math.max(headerH, 1);
+    return {
+      opacity: scrollY.interpolate({
+        inputRange: [0, h * 0.55],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+      }),
+      translateY: scrollY.interpolate({
+        inputRange: [0, h],
+        outputRange: [0, h * 0.75],
+        extrapolate: 'clamp',
+      }),
+    };
+  }, [headerH, scrollY]);
+
+  // 홈 탭 재클릭 → 최상단 스크롤 → refresh ───────────────────────
+  const listRef = useRef<FlatList<CardNews>>(null);
+  const offsetY = useRef(0);
+  const pendingRefresh = useRef(false);
+  const refreshRef = useRef(handleRefresh);
+  const refreshingRef = useRef(refreshing);
+  refreshRef.current = handleRefresh;
+  refreshingRef.current = refreshing;
+
+  const onScroll = useMemo(
+    () =>
+      Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+        useNativeDriver: true,
+        listener: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+          const y = e.nativeEvent.contentOffset.y;
+          offsetY.current = y;
+          // 최상단 스크롤이 끝나면(예약돼 있을 때) 기존 refresh 로직 실행
+          if (pendingRefresh.current && y <= 1) {
+            pendingRefresh.current = false;
+            refreshRef.current();
+          }
+        },
+      }),
+    [scrollY]
+  );
+
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const unsubscribe = (navigation as any).addListener('tabPress', () => {
+      if (!navigation.isFocused() || refreshingRef.current) return; // 다른 탭에서 홈으로 "이동"하는 경우는 제외
+      if (offsetY.current <= 1) {
+        refreshRef.current(); // 이미 최상단이면 바로 refresh
+        return;
+      }
+      pendingRefresh.current = true;
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   const renderFooter = () =>
     hasMore ? (
       <View style={{ paddingVertical: 24, alignItems: 'center' }}>
@@ -109,21 +178,37 @@ export default function HomeScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: '#FFF9EC' }}>
       <Animated.FlatList
+        ref={listRef}
         data={news}
         renderItem={({ item }) => <NewsItem item={item} onPress={handleCardPress} />}
         keyExtractor={(item) => item.id}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
-        ListHeaderComponent={<HomeHeader topInset={insets.top} />}
+        ListHeaderComponent={
+          <Animated.View
+            onLayout={(e) => setHeaderH(e.nativeEvent.layout.height)}
+            style={{
+              opacity: headerAnim.opacity,
+              transform: [{ translateY: headerAnim.translateY }],
+            }}
+          >
+            <HomeHeader topInset={insets.top} />
+          </Animated.View>
+        }
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         refreshing={refreshing}
         onRefresh={handleRefresh}
+        progressViewOffset={insets.top + 8}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingBottom: 100,
         }}
         scrollEventThrottle={16}
+        onScroll={onScroll} // [NEW]
+        onScrollBeginDrag={() => {
+          pendingRefresh.current = false;
+        }}
       />
     </View>
   );
