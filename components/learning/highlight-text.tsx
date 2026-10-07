@@ -36,19 +36,21 @@ export default function HighlightText({ text, terms, onTermPress, style }: Props
   const segments = buildSegments(text);
 
   return (
-    <Text style={[{ fontSize: 15, lineHeight: 26, color: '#22272B' }, style]}>
+    <Text style={[{ fontSize: 16, lineHeight: 28, color: '#8A8A8D' }, style]}>
       {segments.map((seg, i) =>
         seg.term ? (
-          <Text
-            key={`${seg.text}-${i}`}
-            onPress={() => onTermPress(seg.term!)}
-            style={{
-              backgroundColor: 'rgba(255, 220, 83, 0.35)',
-              color: '#22272B',
-              fontWeight: '600',
-            }}
-          >
-            {seg.text}
+          <Text key={`${seg.text}-${i}`}>
+            <Text
+              onPress={() => onTermPress(seg.term!)}
+              style={{
+                color: '#0e7fa3',
+                backgroundPosition: 'top',
+                backgroundColor: '#EAF6F9',
+              }}
+            >
+              {seg.text}
+              {' ?⃝'}
+            </Text>
           </Text>
         ) : (
           <Text key={`plain-${i}`}>{seg.text}</Text>
