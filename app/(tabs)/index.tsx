@@ -176,7 +176,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#FFF9EC' }}>
+    <View style={{ flex: 1, backgroundColor: '#F9F9F9' }}>
       <Animated.FlatList
         ref={listRef}
         data={news}

@@ -144,6 +144,13 @@ export const KEYWORD_NEWS = [
       'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     category: 'tech',
   },
+  {
+    id: '10',
+    keyword: '메타버스',
+    image:
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'tech',
+  },
 ];
 
 export const newsBodyMock: NewsBodyData = {

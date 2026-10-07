@@ -19,7 +19,7 @@ export default function HomeHeader({ topInset = 52 }: Props) {
       {/* ── 상단 로고 바 ── */}
       <View
         style={{
-          paddingTop: topInset + 12,
+          paddingTop: topInset,
           paddingHorizontal: 16,
           paddingBottom: 12,
           flexDirection: 'row',

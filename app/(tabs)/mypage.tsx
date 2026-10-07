@@ -79,7 +79,7 @@ export default function MypageScreen() {
   const selectedAvatar = AVATAR_OPTIONS.find((avatar) => avatar.id === profile.avatarId);
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={{ backgroundColor: '#FFF9EC' }}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={{ backgroundColor: '#F9F9F9' }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 110, gap: 16 }}

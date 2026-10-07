@@ -3,7 +3,12 @@ import { Platform, type ViewStyle } from 'react-native';
 // 탭바에서 쓰던 값을 그대로 토큰화했습니다.
 const sh = (opacity: number, radius: number, y: number, elevation: number): ViewStyle =>
   Platform.select<ViewStyle>({
-    ios: { shadowColor: '#000', shadowOffset: { width: 0, height: y }, shadowOpacity: opacity, shadowRadius: radius },
+    ios: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: y },
+      shadowOpacity: opacity,
+      shadowRadius: radius,
+    },
     android: { elevation },
     default: {},
   }) as ViewStyle;
@@ -18,7 +23,12 @@ export const glass = {
   plate: 'rgba(255, 255, 255, 0.4)',
   blur: 60,
   // plate 투명도(0.4)만큼 그림자가 옅어지므로 원본보다 shadowOpacity를 높게 잡았습니다.
-  shadow: { none: {} as ViewStyle, sm: sh(0.18, 12, 4, 4), md: sh(0.22, 24, 8, 8), lg: sh(0.26, 32, 12, 12) },
+  shadow: {
+    none: {} as ViewStyle,
+    sm: sh(0.18, 12, 3, 3),
+    md: sh(0.22, 24, 7, 7),
+    lg: sh(0.26, 32, 12, 12),
+  },
 };
 
 export type ShadowLevel = keyof typeof glass.shadow;

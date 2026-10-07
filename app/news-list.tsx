@@ -1,3 +1,4 @@
+import { GlassIconButton } from '@/components/common/glass';
 import { useNewsDetail } from '@/context/NewsDetailContext';
 import { KEYWORD_NEWS } from '@/utils/mock';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -88,7 +89,7 @@ export default function NewsListScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#FFF9EC' }}>
+    <View style={{ flex: 1, backgroundColor: '#F9F9F9' }}>
       <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
         {/* 헤더 */}
         <View
@@ -100,31 +101,18 @@ export default function NewsListScreen() {
             gap: 8,
           }}
         >
-          <TouchableOpacity
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-            style={{
-              padding: 10,
-              borderRadius: 100,
-              backgroundColor: '#fff',
-              borderWidth: 1,
-              borderColor: '#F0EEEC',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <ChevronLeft size={20} color="#22272B" />
-          </TouchableOpacity>
+          <GlassIconButton icon={ChevronLeft} label="이전" onPress={() => router.back()} />
           <View
             style={{
               flex: 1,
               flexDirection: 'row',
               alignItems: 'center',
               gap: 8,
+              paddingHorizontal: 4,
             }}
           >
             <Search size={18} color="#898989" />
-            <Text style={{ fontSize: 15, fontWeight: '700', color: '#22272B', flex: 1 }}>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: '#22272B', flex: 1 }}>
               {displayKeyword}
             </Text>
           </View>
