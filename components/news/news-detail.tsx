@@ -1,9 +1,11 @@
 import NewsBody from '@/components/news/news-body';
+import QuizCTA, { useQuizCTA } from '@/components/quiz/QuizCTA';
 import NewsCardTransition, {
   type NewsCardTransitionRef,
 } from '@/components/transition/news-card-transition';
 import { newsService } from '@/services';
 import type { CardNews } from '@/types';
+import type { QuizResult } from '@/types/learning';
 import { newsBodyMock } from '@/utils/mock';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Share2, X } from 'lucide-react-native';
@@ -12,6 +14,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Alert, Image, ScrollView, Share, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassIconButton } from '../common/glass';
+import QuizMode from '../quiz/QuizMode';
 
 type NewsDetailProps = {
   newsId: string;
@@ -30,12 +33,23 @@ export default function NewsDetail({
 }: NewsDetailProps) {
   const [news, setNews] = useState<CardNews | null>(null);
   const [isClosing, setIsClosing] = useState(false);
+  const bodyData = { ...newsBodyMock, newsId }; // 기존 줄을 위로 이동
+  const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
+  const [quizMode, setQuizMode] = useState(false);
+  const quizDone = quizResults.length === bodyData.quizzes.length;
+  const cta = useQuizCTA(bodyData.quizzes.length > 0 && !quizDone && !quizMode, 480);
+  const maxHoney = bodyData.quizzes.reduce((s, q) => s + q.honey, 0);
+
+  const insets = useSafeAreaInsets();
 
   const transitionRef = useRef<NewsCardTransitionRef>(null);
 
   useEffect(() => {
     setNews(null);
     setIsClosing(false);
+    setQuizResults([]);
+    setQuizMode(false);
+    cta.reset();
 
     newsService
       .getNewsById(newsId)
@@ -67,8 +81,13 @@ export default function NewsDetail({
 
   // 목업: API 연결 전까지 newsBodyMock 사용
   // 실제 연결 시: newsBodyService.getBodyById(newsId) 로 교체
-  const bodyData = { ...newsBodyMock, newsId };
-  const insets = useSafeAreaInsets();
+
+  const handleQuizAnswer = (r: QuizResult) =>
+    setQuizResults((prev) => (prev.some((x) => x.quizId === r.quizId) ? prev : [...prev, r]));
+  const openQuiz = () => {
+    cta.hide();
+    setQuizMode(true);
+  };
 
   return (
     <NewsCardTransition
@@ -83,20 +102,22 @@ export default function NewsDetail({
     >
       <View className="flex-1 h-full w-full bg-mono-100">
         {/* 뒤로가기 */}
-        <View
-          style={{
-            flexDirection: 'row',
-            position: 'absolute',
-            right: 10,
-            top: insets.top,
-            zIndex: 9999,
-            elevation: 9999,
-            gap: 12,
-          }}
-        >
-          <GlassIconButton icon={Share2} label="뒤로" onPress={handleShare} />
-          <GlassIconButton icon={X} label="뒤로" onPress={handleClose} />
-        </View>
+        {!quizMode && (
+          <View
+            style={{
+              flexDirection: 'row',
+              position: 'absolute',
+              right: 10,
+              top: insets.top,
+              zIndex: 9999,
+              elevation: 9999,
+              gap: 12,
+            }}
+          >
+            <GlassIconButton icon={Share2} label="공유" onPress={handleShare} />
+            <GlassIconButton icon={X} label="닫기" onPress={handleClose} />
+          </View>
+        )}
 
         {/* 컨텐츠 */}
         {!news ? (
@@ -113,6 +134,8 @@ export default function NewsDetail({
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 40 }}
+            onScroll={cta.onScroll}
+            scrollEventThrottle={16}
           >
             {/* 카드뉴스 (기존 컴포넌트) */}
             <View className="h-[440px]">
@@ -140,10 +163,19 @@ export default function NewsDetail({
             </View>
 
             {/* 본문 학습 섹션 */}
-            <NewsBody data={bodyData} />
+            <NewsBody data={bodyData} quizResults={quizResults} onOpenQuiz={openQuiz} />
           </ScrollView>
         )}
       </View>
+      <QuizCTA visible={cta.visible} maxHoney={maxHoney} onStart={openQuiz} onClose={cta.hide} />
+      {quizMode && (
+        <QuizMode
+          quizzes={bodyData.quizzes}
+          results={quizResults}
+          onAnswer={handleQuizAnswer}
+          onClose={() => setQuizMode(false)}
+        />
+      )}
     </NewsCardTransition>
   );
 }
