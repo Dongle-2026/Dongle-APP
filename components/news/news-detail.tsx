@@ -6,11 +6,12 @@ import NewsCardTransition, {
 import { newsService } from '@/services';
 import type { CardNews } from '@/types';
 import { newsBodyMock } from '@/utils/mock';
-import { ChevronLeft } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import type { RefObject } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GlassIconButton } from '../common/glass';
 
 type NewsDetailProps = {
   newsId: string;
@@ -55,6 +56,7 @@ export default function NewsDetail({
   // 목업: API 연결 전까지 newsBodyMock 사용
   // 실제 연결 시: newsBodyService.getBodyById(newsId) 로 교체
   const bodyData = { ...newsBodyMock, newsId };
+  const insets = useSafeAreaInsets();
 
   return (
     <NewsCardTransition
@@ -69,14 +71,9 @@ export default function NewsDetail({
     >
       <SafeAreaView className="flex-1 h-full w-full bg-mono-100">
         {/* 뒤로가기 */}
-        <TouchableOpacity
-          onPress={handleClose}
-          disabled={isClosing}
-          className="p-4"
-          activeOpacity={1}
-        >
-          <ChevronLeft size={28} />
-        </TouchableOpacity>
+        <View style={{ position: 'absolute', right: 10, top: insets.top }}>
+          <GlassIconButton icon={X} label="뒤로" onPress={handleClose} />
+        </View>
 
         {/* 컨텐츠 */}
         {!news ? (
