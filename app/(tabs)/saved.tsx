@@ -1,63 +1,50 @@
-import Section from '@/components/common/Section';
+import { GlassChip } from '@/components/common/glass';
 import SectionHeader from '@/components/common/SectionHeader';
+import { useNewsDetail } from '@/context/NewsDetailContext';
 import { mockReadHistory, mockSavedTerms } from '@/mocks/mypageMock';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BookOpen, ChevronRight } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { useRef } from 'react';
 import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const savedNews = mockReadHistory; // TODO: 저장 기사 데이터로 교체 (기존 코드도 동일 mock 사용)
+
+// 기존 MiniNewsCard 디자인 유지 + 탭하면 기존 뉴스 상세로 연결, 가벼운 glass shadow 추가
 function MiniNewsCard({ item }: { item: (typeof mockReadHistory)[number] }) {
+  const { open } = useNewsDetail();
+  const ref = useRef<View>(null);
   return (
     <TouchableOpacity
       activeOpacity={0.85}
-      style={{
-        width: 128,
-        flexShrink: 0,
-      }}
+      style={{ width: 128, flexShrink: 0 }}
+      onPress={() =>
+        open({ newsId: item.id, thumbnail: item.thumbnail, title: item.title, cardRef: ref })
+      }
     >
       <View
-        style={{
-          width: 128,
-          aspectRatio: 0.72,
-          borderRadius: 14,
-          overflow: 'hidden',
-          backgroundColor: '#F0EEEC',
-          position: 'relative',
-        }}
+        ref={ref}
+        collapsable={false}
+        style={[
+          {
+            width: 128,
+            aspectRatio: 0.72,
+            borderRadius: 18,
+            overflow: 'hidden',
+            backgroundColor: '#F0EEEC',
+          },
+        ]}
       >
-        <Image
-          source={{ uri: item.thumbnail }}
-          style={{
-            width: '100%',
-            height: '100%',
-          }}
-        />
+        <Image source={{ uri: item.thumbnail }} style={{ width: '100%', height: '100%' }} />
         <LinearGradient
           colors={['rgba(0,0,0,0.01)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+          style={{ position: 'absolute', inset: 0 }}
           pointerEvents="none"
         />
-
-        <View
-          style={{
-            position: 'absolute',
-            left: 12,
-            right: 12,
-            bottom: 12,
-            zIndex: 10,
-            elevation: 10,
-          }}
-        >
+        <View style={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>
           <Text
-            style={{
-              fontSize: 14,
-              lineHeight: 19,
-              fontWeight: '800',
-              color: '#FFFFFF',
-            }}
             numberOfLines={3}
+            style={{ fontSize: 14, lineHeight: 19, fontWeight: '800', color: '#fff' }}
           >
             {item.title}
           </Text>
@@ -67,89 +54,58 @@ function MiniNewsCard({ item }: { item: (typeof mockReadHistory)[number] }) {
   );
 }
 
+const Rail = ({ data }: { data: typeof mockReadHistory }) => (
+  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+    {data.map((item) => (
+      <MiniNewsCard key={item.id} item={item} />
+    ))}
+  </ScrollView>
+);
+
 export default function SavedScreen() {
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} className="bg-mono-100">
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#F9F9F9' }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 110, gap: 16 }}
       >
-        {/* ── 저장한 용어 ── */}
-        <Section>
-          <SectionHeader
-            title="저장한 용어"
-            subtitle={`${mockSavedTerms.length}개 저장됨`}
-            onMore={() => {}}
-          />
+        <Text className="text-[32px]" style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+          저장
+        </Text>
+        <View className="px-4 gap-8">
+          <View>
+            <SectionHeader
+              title="저장한 용어"
+              subtitle={`${mockSavedTerms.length}개 저장됨`}
+              onMore={() => router.push('/saved-terms')}
+            />
 
-          {/* 용어 칩 */}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {mockSavedTerms.slice(0, 8).map((t) => (
-              <TouchableOpacity
-                key={t.id}
-                activeOpacity={0.75}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 5,
-                  backgroundColor: '#F6F6F8',
-                  borderRadius: 20,
-                  paddingHorizontal: 12,
-                  paddingVertical: 7,
-                  borderWidth: 1,
-                  borderColor: '#F0EEEC',
-                }}
-              >
-                <BookOpen size={12} color="#898989" />
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#22272B' }}>{t.term}</Text>
-              </TouchableOpacity>
-            ))}
-
-            {mockSavedTerms.length > 8 && (
-              <TouchableOpacity
-                activeOpacity={0.7}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 3,
-                  backgroundColor: '#22272B',
-                  borderRadius: 20,
-                  paddingHorizontal: 12,
-                  paddingVertical: 7,
-                }}
-              >
-                <Text style={{ fontSize: 13, fontWeight: '700', color: '#FFDC53' }}>
-                  +{mockSavedTerms.length - 8}개 더
-                </Text>
-                <ChevronRight size={13} color="#FFDC53" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </Section>
-
-        {/* ── 최근 읽은 기사 ── */}
-        <Section>
-          <SectionHeader title="최근 읽은 기사" onMore={() => {}} />
-          <View style={{ overflow: 'hidden' }}>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              {mockReadHistory.map((item) => (
-                <MiniNewsCard key={item.id} item={item} />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {mockSavedTerms.slice(0, 8).map((t) => (
+                <GlassChip key={t.id} label={t.term} onPress={() => router.push('/saved-terms')} />
               ))}
+              {mockSavedTerms.length > 8 && (
+                <GlassChip
+                  selected
+                  label={`+${mockSavedTerms.length - 8}개 더`}
+                  onPress={() => router.push('/saved-terms')}
+                />
+              )}
             </View>
           </View>
-        </Section>
-
-        {/* ── 저장한 기사 ── */}
-        <Section>
-          <SectionHeader title="저장한 기사" onMore={() => {}} />
-          <View style={{ overflow: 'hidden' }}>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              {mockReadHistory.map((item) => (
-                <MiniNewsCard key={item.id} item={item} />
-              ))}
-            </View>
+          <View>
+            <SectionHeader
+              title="저장한 기사"
+              subtitle={`${savedNews.length}개`}
+              onMore={() => router.push('/saved-news')}
+            />
+            <Rail data={savedNews} />
           </View>
-        </Section>
+          <View>
+            <SectionHeader title="최근 읽은 기사" onMore={() => router.push('/recent-news')} />
+            <Rail data={mockReadHistory} />
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

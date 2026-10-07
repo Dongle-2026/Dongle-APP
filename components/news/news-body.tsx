@@ -3,9 +3,9 @@ import QuizCard from '@/components/learning/quiz-card';
 import HoneyRewardBanner from '@/components/learning/reward-banner';
 import TermModal from '@/components/learning/term-modal';
 import type { NewsBodyData, QuizResult, TermDefinition } from '@/types/learning';
-import { BookOpen, ChevronDown, ChevronUp, Share2, Tag } from 'lucide-react-native';
+import { BookOpen, ChevronDown, ChevronUp, Tag } from 'lucide-react-native';
 import { useState } from 'react';
-import { Alert, Share, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 type Props = {
   data: NewsBodyData;
@@ -34,78 +34,42 @@ export default function NewsBody({ data }: Props) {
     });
   };
 
-  const handleShare = async () => {
-    try {
-      await Share.share({
-        message: `📰 ${data.headline}\n\n돈글돈글에서 읽고 있어요!\n출처: ${data.source} (${data.publishedAt})`,
-        title: data.headline,
-      });
-    } catch {
-      Alert.alert('공유 실패', '잠시 후 다시 시도해주세요.');
-    }
-  };
-
   return (
     <View>
-      {/* ── Article meta bar ── */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: 16,
-          paddingVertical: 14,
-          borderTopWidth: 1,
-          borderTopColor: '#F0EEEC',
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Text style={{ fontSize: 12, color: '#898989' }}>{data.source}</Text>
-          <Text style={{ color: '#D9D9D9' }}>|</Text>
-          <Text style={{ fontSize: 12, color: '#898989' }}>{data.publishedAt}</Text>
-        </View>
-        <TouchableOpacity onPress={handleShare} activeOpacity={0.7}>
-          <Share2 size={18} color="#898989" />
-        </TouchableOpacity>
-      </View>
-
       {/* ── Article body ── */}
-      <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+      <View style={{ padding: 16, paddingBottom: 8 }}>
         {/* Headline */}
         <Text
           style={{
-            fontSize: 20,
-            fontWeight: '800',
-            color: '#22272B',
-            lineHeight: 30,
-            letterSpacing: -0.5,
-            marginBottom: 6,
+            width: '85%',
+            fontSize: 17,
+            fontWeight: '500',
+            lineHeight: 26,
+            marginVertical: 12,
           }}
         >
-          {data.headline}
+          {data.intro}
         </Text>
-        {data.subheadline && (
-          <Text
-            style={{
-              fontSize: 14,
-              color: '#898989',
-              lineHeight: 21,
-              marginBottom: 20,
-            }}
-          >
-            {data.subheadline}
-          </Text>
-        )}
 
         {/* Body sections */}
         <View style={{ gap: 18 }}>
           {data.sections.map((section) => (
-            <HighlightedText
-              key={section.id}
-              text={section.text}
-              terms={data.terms}
-              onTermPress={setActiveTerm}
-            />
+            <View key={section.id}>
+              {section.subtitle && (
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: '700',
+                    marginVertical: 16,
+                    color: '#22272B',
+                  }}
+                >
+                  {section.subtitle}
+                </Text>
+              )}
+
+              <HighlightedText text={section.text} terms={data.terms} onTermPress={setActiveTerm} />
+            </View>
           ))}
         </View>
       </View>

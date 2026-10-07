@@ -23,16 +23,15 @@ export type Quiz = {
 
 export type NewsBodySection = {
   id: string;
+  subtitle: string;
   text: string;
 };
 
 export type NewsBodyData = {
   newsId: string;
-  headline: string;
-  subheadline?: string;
+  intro: string;
   source: string;
   publishedAt: string;
-  readingTime: number; // 분
   sections: NewsBodySection[];
   terms: TermDefinition[];
   quizzes: Quiz[];
