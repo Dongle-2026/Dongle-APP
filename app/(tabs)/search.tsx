@@ -1,17 +1,23 @@
+// ⚠ 이 파일에서 기존 RecentSearchSection / TrendingSection / SuggestionList / KeywordCard 는 그대로 두고
+//    SearchScreen(default export)만 아래 코드로 교체하세요. (3곳 Glass 패치는 답변 본문 참고)
 import CategorySlider from '@/components/category-slider';
+import { GlassCard } from '@/components/common/glass';
+import SearchMorphBar from '@/components/search/SearchMorphBar';
 import { RECENT_SEARCHES, TRENDING_KEYWORDS } from '@/mocks/searchMock';
 import { CATEGORIES, KEYWORD_NEWS } from '@/utils/mock';
 import { router } from 'expo-router';
 import { ArrowRight, Clock, Minus, Search, TrendingDown, TrendingUp, X } from 'lucide-react-native';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  BackHandler,
+  Dimensions,
   FlatList,
   Image,
   Keyboard,
   ScrollView,
+  StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -45,7 +51,7 @@ function RecentSearchSection({
 }) {
   if (searches.length === 0) return null;
   return (
-    <View style={{ marginBottom: 36 }}>
+    <View style={{ paddingVertical: 28 }}>
       <View
         style={{
           flexDirection: 'row',
@@ -69,28 +75,24 @@ function RecentSearchSection({
         }}
       >
         {searches.map((q) => (
-          <TouchableOpacity
-            key={q}
-            onPress={() => onPress(q)}
-            activeOpacity={0.75}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 6,
-              backgroundColor: C.surf,
-              borderRadius: 20,
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              borderWidth: 1,
-              borderColor: C.border2,
-            }}
-          >
-            <Clock size={12} color={C.ink2} />
-            <Text style={{ fontSize: 13, color: C.ink }}>{q}</Text>
-            <TouchableOpacity onPress={() => onRemove(q)} activeOpacity={0.7} hitSlop={8}>
-              <X size={11} color={C.ink3} />
-            </TouchableOpacity>
-          </TouchableOpacity>
+          <GlassCard key={q} onPress={() => onPress(q)} padding={2} radius={20} shadow="none">
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                gap: 5,
+              }}
+            >
+              <Clock size={12} color={C.ink2} />
+              <Text style={{ fontSize: 13, color: C.ink }}>{q}</Text>
+
+              <TouchableOpacity onPress={() => onRemove(q)} activeOpacity={0.7} hitSlop={8}>
+                <X size={11} color={C.ink2} />
+              </TouchableOpacity>
+            </View>
+          </GlassCard>
         ))}
       </View>
     </View>
@@ -107,47 +109,45 @@ const TREND_ICON = {
 
 function TrendingSection({ onPress }: { onPress: (q: string) => void }) {
   return (
-    <View style={{ marginBottom: 4 }}>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        {[TRENDING_KEYWORDS.slice(0, 4), TRENDING_KEYWORDS.slice(4, 8)].map((col, ci) => (
-          <View key={ci} style={{ flex: 1 }}>
-            {col.map((item, i) => (
-              <TouchableOpacity
-                key={item.rank}
-                onPress={() => onPress(item.keyword)}
-                activeOpacity={0.75}
+    <View style={{ flexDirection: 'row', gap: 8 }}>
+      {[TRENDING_KEYWORDS.slice(0, 4), TRENDING_KEYWORDS.slice(4, 8)].map((col, ci) => (
+        <View key={ci} style={{ flex: 1 }}>
+          {col.map((item, i) => (
+            <TouchableOpacity
+              key={item.rank}
+              onPress={() => onPress(item.keyword)}
+              activeOpacity={0.75}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                paddingVertical: 10,
+                borderBottomWidth: i < col.length - 1 ? 1 : 0,
+                borderBottomColor: C.border,
+              }}
+            >
+              <Text
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                  paddingVertical: 10,
-                  borderBottomWidth: i < col.length - 1 ? 1 : 0,
-                  borderBottomColor: C.border,
+                  width: 18,
+                  fontSize: 12,
+                  fontWeight: '800',
+                  color: item.rank <= 3 ? C.ink : C.ink2,
+                  textAlign: 'center',
                 }}
               >
-                <Text
-                  style={{
-                    width: 18,
-                    fontSize: 12,
-                    fontWeight: '800',
-                    color: item.rank <= 3 ? C.ink : C.ink2,
-                    textAlign: 'center',
-                  }}
-                >
-                  {item.rank}
-                </Text>
-                <Text
-                  style={{ flex: 1, fontSize: 13, fontWeight: '600', color: C.ink }}
-                  numberOfLines={1}
-                >
-                  {item.keyword}
-                </Text>
-                {TREND_ICON[item.change]}
-              </TouchableOpacity>
-            ))}
-          </View>
-        ))}
-      </View>
+                {item.rank}
+              </Text>
+              <Text
+                style={{ flex: 1, fontSize: 13, fontWeight: '600', color: C.ink }}
+                numberOfLines={1}
+              >
+                {item.keyword}
+              </Text>
+              {TREND_ICON[item.change]}
+            </TouchableOpacity>
+          ))}
+        </View>
+      ))}
     </View>
   );
 }
@@ -168,10 +168,6 @@ function SuggestionList({ query, onSelect }: { query: string; onSelect: (q: stri
   return (
     <View
       style={{
-        backgroundColor: C.surf,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: C.border2,
         overflow: 'hidden',
         shadowColor: '#000',
         shadowOpacity: 0.07,
@@ -213,11 +209,13 @@ function KeywordCard({
   item: (typeof KEYWORD_NEWS)[number];
   onPress: () => void;
 }) {
+  const { width: screenWidth } = Dimensions.get('window');
+  const cardWidth = (screenWidth - 32) / 2;
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
-      style={{ flex: 1, aspectRatio: 3 / 3.8, borderRadius: 6, overflow: 'hidden' }}
+      style={{ borderRadius: 16, overflow: 'hidden', width: cardWidth, height: 100 }}
     >
       <Image
         source={{ uri: item.image }}
@@ -234,15 +232,14 @@ function KeywordCard({
           backgroundColor: 'rgba(0,0,0,0.38)',
         }}
       />
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 10 }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end', paddingLeft: 12, paddingBottom: 12 }}>
         <Text
-          numberOfLines={2}
+          numberOfLines={1}
           style={{
             fontSize: 16,
-            fontWeight: '800',
+            fontWeight: '700',
             color: '#fff',
             lineHeight: 20,
-            textAlign: 'center',
           }}
         >
           {item.keyword}
@@ -252,52 +249,54 @@ function KeywordCard({
   );
 }
 
-// ─── 메인 ─────────────────────────────────────────────────────────────────────
-
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [recentSearches, setRecentSearches] = useState<string[]>(RECENT_SEARCHES);
 
-  const inputRef = useRef<TextInput>(null);
-  // 기본화면(카테고리+그리드) fade: 검색 중엔 숨김
-  const gridFade = useRef(new Animated.Value(1)).current;
-  // 검색 오버레이 fade
-  const searchFade = useRef(new Animated.Value(0)).current;
+  // 0 = 기본 화면(버튼), 1 = 검색 중(검색창). 검색바·그리드·오버레이가 이 값 하나로 같이 움직임
+  const progress = useRef(new Animated.Value(0)).current;
+  const gridOpacity = progress.interpolate({
+    inputRange: [0, 0.5],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+  const overlayOpacity = progress.interpolate({
+    inputRange: [0.3, 1],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
-  const enterSearch = useCallback(() => {
-    setIsSearching(true);
-    Animated.parallel([
-      Animated.timing(gridFade, { toValue: 0, duration: 150, useNativeDriver: true }),
-      Animated.timing(searchFade, { toValue: 1, duration: 200, useNativeDriver: true }),
-    ]).start();
-    setTimeout(() => inputRef.current?.focus(), 50);
+  const cancel = useCallback(() => {
+    Keyboard.dismiss();
+    setIsSearching(false);
   }, []);
 
-  const exitSearch = useCallback(() => {
-    Keyboard.dismiss();
-    Animated.parallel([
-      Animated.timing(searchFade, { toValue: 0, duration: 150, useNativeDriver: true }),
-      Animated.timing(gridFade, { toValue: 1, duration: 200, useNativeDriver: true }),
-    ]).start(() => {
+  // Android 뒤로가기: 검색 중이면 검색 종료
+  useEffect(() => {
+    if (!isSearching) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      cancel();
+      return true;
+    });
+    return () => sub.remove();
+  }, [isSearching, cancel]);
+
+  // 기존 검색 로직 유지
+  const executeSearch = useCallback(
+    (kw: string) => {
+      const q = kw.trim();
+      if (!q) return;
+      setRecentSearches((prev) => [q, ...prev.filter((s) => s !== q)].slice(0, 5));
+      Keyboard.dismiss();
+      progress.setValue(0);
       setIsSearching(false);
       setQuery('');
-    });
-  }, []);
-
-  const executeSearch = useCallback((kw: string) => {
-    const q = kw.trim();
-    if (!q) return;
-    setRecentSearches((prev) => [q, ...prev.filter((s) => s !== q)].slice(0, 5));
-    Keyboard.dismiss();
-    // 애니메이션 즉시 리셋
-    searchFade.setValue(0);
-    gridFade.setValue(1);
-    setIsSearching(false);
-    setQuery('');
-    router.push({ pathname: '/news-list', params: { keyword: q } });
-  }, []);
+      router.push({ pathname: '/news-list', params: { keyword: q } });
+    },
+    [progress]
+  );
 
   const removeRecent = useCallback(
     (q: string) => setRecentSearches((p) => p.filter((s) => s !== q)),
@@ -311,225 +310,25 @@ export default function SearchScreen() {
       : KEYWORD_NEWS.filter((n) => (n as any).category === selectedCategory);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={['top']}>
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          검색바 — 항상 렌더, 절대 사라지지 않음
-         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F9F9F9' }} edges={['top']}>
+      <SearchMorphBar
+        title="주목할 소식"
+        open={isSearching}
+        onOpen={() => setIsSearching(true)}
+        onCancel={cancel}
+        onClosed={() => setQuery('')}
+        query={query}
+        onChangeQuery={setQuery}
+        onSubmit={executeSearch}
+        progress={progress}
+      />
 
-      <View
-        style={{
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          zIndex: 20,
-          backgroundColor: C.bg,
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <View
-            style={{
-              flex: 1,
-              height: 52,
-              borderRadius: 26,
-              overflow: 'hidden',
-              position: 'relative',
-              borderWidth: 1,
-              borderColor: 'rgba(255,255,255,0.7)',
-              backgroundColor: 'rgba(255,255,255,0.88)',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.06,
-              shadowRadius: 12,
-              elevation: 4,
-            }}
-          >
-            {!isSearching ? (
-              <TouchableOpacity
-                onPress={enterSearch}
-                activeOpacity={0.8}
-                style={{
-                  flex: 1,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingHorizontal: 18,
-                  gap: 10,
-                }}
-              >
-                <Search size={18} color={C.ink2} strokeWidth={2} />
-                <Text
-                  style={{
-                    flex: 1,
-                    fontSize: 14,
-                    color: C.ink3,
-                    fontWeight: '500',
-                  }}
-                >
-                  궁금한 소식을 찾아보세요
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              <View
-                style={{
-                  flex: 1,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingHorizontal: 18,
-                  gap: 10,
-                }}
-              >
-                <Search size={18} color={C.ink} strokeWidth={2} />
-                <TextInput
-                  ref={inputRef}
-                  value={query}
-                  onChangeText={setQuery}
-                  onSubmitEditing={() => executeSearch(query)}
-                  placeholder="궁금한 소식을 찾아보세요"
-                  placeholderTextColor={C.ink3}
-                  returnKeyType="search"
-                  style={{
-                    flex: 1,
-                    fontSize: 14,
-                    color: C.ink,
-                    fontWeight: '500',
-                    paddingVertical: 0,
-                  }}
-                />
-                {query.length > 0 && (
-                  <TouchableOpacity onPress={() => setQuery('')} activeOpacity={0.7}>
-                    <View
-                      style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: 10,
-                        backgroundColor: C.bg,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <X size={12} color={C.ink2} strokeWidth={2.5} />
-                    </View>
-                  </TouchableOpacity>
-                )}
-              </View>
-            )}
-          </View>
-
-          {isSearching && (
-            <TouchableOpacity onPress={exitSearch} activeOpacity={0.7}>
-              <Text style={{ fontSize: 14, fontWeight: '500', color: C.ink2 }}>취소</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          [검색 중] 최근검색어 + 트렌드 + 자동완성
-          absolute로 깔아서 검색바 아래부터 채움
-         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <Animated.View
-        pointerEvents={isSearching ? 'auto' : 'none'}
-        style={{
-          position: 'absolute',
-          // 검색바(zIndex 20) 아래, top은 검색바가 차지하는 높이만큼
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          paddingTop: isSearching ? 140 : 0,
-          backgroundColor: C.bg,
-          zIndex: 10,
-          opacity: searchFade,
-        }}
-      >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8 }}
+      <View style={{ flex: 1 }}>
+        {/* [기본 화면] 카테고리 + 키워드 그리드 */}
+        <Animated.View
+          pointerEvents={isSearching ? 'none' : 'auto'}
+          style={{ flex: 1, opacity: gridOpacity }}
         >
-          {/* 자동완성: 입력 있을 때 */}
-          {query.trim().length > 0 && (
-            <View style={{ marginBottom: 24 }}>
-              <SuggestionList query={query} onSelect={executeSearch} />
-            </View>
-          )}
-
-          {/* 최근 검색어 + 트렌드: 입력 없을 때 */}
-          {query.trim().length === 0 && (
-            <>
-              <RecentSearchSection
-                searches={recentSearches}
-                onPress={executeSearch}
-                onRemove={removeRecent}
-                onClearAll={clearAllRecent}
-              />
-              <View
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 12 }}
-              >
-                <Text style={{ fontSize: 18, fontWeight: '800', color: C.ink }}>실시간 트렌드</Text>
-                <View
-                  style={{
-                    backgroundColor: C.point,
-                    borderRadius: 6,
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
-                  }}
-                >
-                  <Text style={{ fontSize: 10, fontWeight: '800', color: C.ink }}>LIVE</Text>
-                </View>
-              </View>
-              <View
-                style={{
-                  backgroundColor: C.surf,
-                  borderRadius: 20,
-                  padding: 16,
-                  borderWidth: 1,
-                  borderColor: C.border,
-                }}
-              >
-                <TrendingSection onPress={executeSearch} />
-              </View>
-            </>
-          )}
-        </ScrollView>
-      </Animated.View>
-
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          [기본 화면] 카테고리 + 키워드 그리드
-         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <Animated.View
-        pointerEvents={isSearching ? 'none' : 'auto'}
-        style={{ flex: 1, opacity: gridFade, backgroundColor: C.bg }}
-      >
-        <View style={{ backgroundColor: C.bg }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 7,
-              paddingHorizontal: 16,
-              paddingTop: 12,
-            }}
-          >
-            <Image
-              source={require('@/assets/images/fire.png')}
-              style={{
-                width: 32,
-                height: 32,
-              }}
-            />
-            <Text style={{ fontSize: 18, fontWeight: '800', color: C.ink }}>지금 주목할 소식</Text>
-
-            {/* <View
-            style={{
-              backgroundColor: C.point,
-              borderRadius: 6,
-              paddingHorizontal: 6,
-              paddingVertical: 2,
-            }}
-          >
-            <Text style={{ fontSize: 10, fontWeight: '800', color: C.ink }}>HOT</Text>
-          </View> */}
-          </View>
-
           <View style={{ height: 80 }}>
             <CategorySlider
               category={CATEGORIES}
@@ -537,49 +336,89 @@ export default function SearchScreen() {
               onPress={(id) => setSelectedCategory(id)}
             />
           </View>
-        </View>
-
-        <FlatList
-          data={filteredKeywords}
-          numColumns={3}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          scrollEnabled={false}
-          contentContainerStyle={{
-            paddingHorizontal: 12,
-            backgroundColor: C.bg,
-          }}
-          columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
-          renderItem={({ item }) => (
-            <KeywordCard
-              item={item}
-              onPress={() => {
-                setRecentSearches((prev) =>
-                  [item.keyword, ...prev.filter((s) => s !== item.keyword)].slice(0, 5)
-                );
-                router.push({ pathname: '/news-list', params: { keyword: item.keyword } });
-              }}
-            />
-          )}
-          ListEmptyComponent={
-            <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-              <Search color={C.ink} size={32} />
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: '700',
-                  color: C.ink,
-                  marginTop: 16,
-                  marginBottom: 8,
+          <FlatList
+            data={filteredKeywords}
+            numColumns={2}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={false}
+            contentContainerStyle={{ paddingHorizontal: 12 }}
+            columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
+            renderItem={({ item }) => (
+              <KeywordCard
+                item={item}
+                onPress={() => {
+                  setRecentSearches((prev) =>
+                    [item.keyword, ...prev.filter((s) => s !== item.keyword)].slice(0, 5)
+                  );
+                  router.push({ pathname: '/news-list', params: { keyword: item.keyword } });
                 }}
-              >
-                해당 카테고리 키워드가 없어요
-              </Text>
-              <Text style={{ fontSize: 12, color: C.ink2 }}>다른 카테고리를 선택해보세요</Text>
-            </View>
-          }
-        />
-      </Animated.View>
+              />
+            )}
+            ListEmptyComponent={
+              <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    color: C.ink,
+                    marginTop: 16,
+                    marginBottom: 8,
+                  }}
+                >
+                  해당 카테고리 키워드가 없어요
+                </Text>
+                <Text style={{ fontSize: 12, color: C.ink2 }}>다른 카테고리를 선택해보세요</Text>
+              </View>
+            }
+          />
+        </Animated.View>
+
+        <Animated.View
+          pointerEvents={isSearching ? 'auto' : 'none'}
+          style={[StyleSheet.absoluteFill, { backgroundColor: '#F9F9F9', opacity: overlayOpacity }]}
+        >
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8 }}
+          >
+            {query.trim().length > 0 ? (
+              <View style={{ marginBottom: 24 }}>
+                <SuggestionList query={query} onSelect={executeSearch} />
+              </View>
+            ) : (
+              <>
+                <RecentSearchSection
+                  searches={recentSearches}
+                  onPress={executeSearch}
+                  onRemove={removeRecent}
+                  onClearAll={clearAllRecent}
+                />
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 12 }}
+                >
+                  <Text style={{ fontSize: 18, fontWeight: '800', color: C.ink }}>
+                    실시간 트렌드
+                  </Text>
+                  <View
+                    style={{
+                      backgroundColor: C.point,
+                      borderRadius: 6,
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                    }}
+                  >
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: C.ink }}>LIVE</Text>
+                  </View>
+                </View>
+                <GlassCard padding={16} radius={20} shadow="none">
+                  <TrendingSection onPress={executeSearch} />
+                </GlassCard>
+              </>
+            )}
+          </ScrollView>
+        </Animated.View>
+      </View>
     </SafeAreaView>
   );
 }
