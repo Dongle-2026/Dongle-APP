@@ -1,5 +1,11 @@
 import type { NewsBodyData } from '@/types/learning';
 
+// 홈 헤더
+export const mockHomeHeaderData = {
+  streak: 12,
+  todayHoney: 30,
+};
+
 export const MOCK_IMAGES = [
   'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1080&h=600&fit=crop',
   'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1080&h=600&fit=crop',
@@ -11,6 +17,7 @@ export const MOCK_IMAGES = [
   'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1080&h=600&fit=crop',
 ];
 
+// 카테고리 필터
 export const CATEGORIES = [
   { id: 'all', name: '전체' },
   { id: 'youth', name: '청년', isNew: true },
@@ -191,36 +198,30 @@ export const newsBodyMock: NewsBodyData = {
       definition:
         '지역의 자연·문화 자산을 기반으로 혁신적인 아이디어를 접목해 사업 가치를 창출하는 창업가.',
       example: '전통 시장을 활용한 팝업스토어 브랜드를 운영하는 청년 사업가',
-      category: '창업',
     },
     {
       term: '지방소멸',
       definition:
         '인구 감소와 고령화로 인해 지방 도시가 점차 기능을 잃고 소멸 위기에 처하는 사회 현상.',
       example: '20년 후 전국 228개 시군구 중 절반 이상이 지방소멸 위험 지역으로 분류될 수 있음',
-      category: '정책',
     },
     {
       term: '사업화 자금',
       definition:
         '아이디어나 기술을 실제 사업으로 발전시키기 위해 정부나 기관이 지원하는 초기 창업 자금.',
-      category: '창업',
     },
     {
       term: '비즈니스 모델',
       definition: '기업이 어떻게 가치를 만들고, 전달하고, 수익을 얻는지를 설명하는 사업 구조.',
       example: '구독 모델, 광고 모델, 플랫폼 모델 등',
-      category: '창업',
     },
     {
       term: '판로 확대',
       definition: '제품이나 서비스를 판매할 수 있는 새로운 시장이나 유통 채널을 넓히는 것.',
-      category: '경제',
     },
     {
       term: '팝업스토어',
       definition: '일정 기간 동안만 운영하는 임시 매장. 브랜드 홍보나 신제품 체험을 목적으로 함.',
-      category: '창업',
     },
   ],
   quizzes: [
@@ -269,3 +270,207 @@ export const newsBodyMock: NewsBodyData = {
   ],
   tags: ['청년창업', '부산', '지역경제', '로컬', '정부지원'],
 };
+// 검색 목업데이터 ----------------
+
+// 검색 화면 전용 목업 데이터
+// 실제 연동 시 각 함수를 API 호출로 교체
+
+export const RECENT_SEARCHES = ['기준금리', '청년도약계좌', '부동산 PF', '인플레이션'];
+
+export const TRENDING_KEYWORDS = [
+  { rank: 1, keyword: '기준금리', change: 'up' as const },
+  { rank: 2, keyword: '청년창업', change: 'up' as const },
+  { rank: 3, keyword: '부동산', change: 'same' as const },
+  { rank: 4, keyword: '주식시장', change: 'down' as const },
+  { rank: 5, keyword: '청년도약계좌', change: 'up' as const },
+  { rank: 6, keyword: '환율', change: 'down' as const },
+  { rank: 7, keyword: '물가', change: 'same' as const },
+  { rank: 8, keyword: '취업', change: 'up' as const },
+];
+
+//마이페이지 목업데이터 ----------------
+
+import type {
+  ActivityDay,
+  LearningStats,
+  MyActivity,
+  NotificationSetting,
+  ReadHistory,
+  SavedTerm,
+  UserProfile,
+} from '@/types/mypage';
+
+export const mockProfile: UserProfile = {
+  id: 'user-001',
+  nickname: '단지',
+  bio: '매일 조금씩, 경제 공부 중 ',
+  avatarId: 'default',
+  oauthProvider: 'kakao',
+  joinedAt: '2025.03.14',
+};
+
+export const mockLearningStats: LearningStats = {
+  streak: 12,
+  readNewsCount: 80,
+  totalQuizCount: 80,
+  totalHoney: 1_240,
+};
+
+export const mockMyActivity: MyActivity = {
+  correctRate: 85,
+  totalQuizCount: 80,
+  interestedCategories: ['경제', '투자', '금융'],
+  weakCategories: ['부동산', '세금'],
+};
+
+// 최근 18주(126일) 활동 데이터 생성
+function generateActivityData(): ActivityDay[] {
+  const days: ActivityDay[] = [];
+  const today = new Date();
+
+  for (let i = 125; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+
+    // 최근일수록 활동 많음
+    const recency = (125 - i) / 125;
+    const rand = Math.random();
+
+    let level: 0 | 1 | 2 | 3 | 4 = 0;
+    let honey = 0;
+
+    if (rand > 0.35) {
+      const weighted = rand * recency;
+
+      if (weighted > 0.6) {
+        level = 4;
+        honey = 40 + Math.floor(Math.random() * 20);
+      } else if (weighted > 0.4) {
+        level = 3;
+        honey = 25 + Math.floor(Math.random() * 15);
+      } else if (weighted > 0.25) {
+        level = 2;
+        honey = 12 + Math.floor(Math.random() * 10);
+      } else {
+        level = 1;
+        honey = 5 + Math.floor(Math.random() * 7);
+      }
+    }
+
+    days.push({ date: dateStr, level, honey });
+  }
+
+  return days;
+}
+
+export const mockActivityData: ActivityDay[] = generateActivityData();
+
+export const mockSavedTerms: SavedTerm[] = [
+  {
+    id: 't1',
+    term: '로컬크리에이터',
+    definition: '지역 자산·문화를 기반으로 사업 가치를 만드는 창업가',
+    category: '창업',
+    savedAt: '2025.06.04',
+  },
+  {
+    id: 't2',
+    term: '지방소멸',
+    definition: '인구 감소와 고령화로 지방 도시 기능이 사라지는 현상',
+    category: '정책',
+    savedAt: '2025.06.04',
+  },
+  {
+    id: 't3',
+    term: '기준금리',
+    definition: '한국은행이 금융기관과 거래할 때 기준이 되는 금리',
+    category: '금융',
+    savedAt: '2025.06.02',
+  },
+  {
+    id: 't4',
+    term: '인플레이션',
+    definition: '물가가 전반적으로 지속적으로 오르는 현상',
+    category: '경제',
+    savedAt: '2025.06.01',
+  },
+  {
+    id: 't5',
+    term: '사업화 자금',
+    definition: '아이디어를 실제 사업으로 발전시키기 위한 초기 창업 자금',
+    category: '창업',
+    savedAt: '2025.05.30',
+  },
+  {
+    id: 't6',
+    term: '판로 확대',
+    definition: '제품·서비스를 판매할 수 있는 새로운 시장·채널을 넓히는 것',
+    category: '경제',
+    savedAt: '2025.05.28',
+  },
+];
+
+export const mockReadHistory: ReadHistory[] = [
+  {
+    id: 'r1',
+    title: '청년 로컬크리에이터 레벨업 사업, 최대 6000만 원 지원',
+    source: '부산일보',
+    thumbnail: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&q=80',
+    readAt: '오늘',
+    honey: 35,
+  },
+  {
+    id: 'r2',
+    title: '한국은행, 기준금리 3.25%로 동결... 하반기 인하 가능성은?',
+    source: '연합뉴스',
+    thumbnail: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80',
+    readAt: '어제',
+    honey: 40,
+  },
+  {
+    id: 'r3',
+    title: '청년도약계좌 가입자 100만 돌파, 실질 수익률은?',
+    source: '한겨레',
+    thumbnail: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400&q=80',
+    readAt: '2일 전',
+    honey: 30,
+  },
+  {
+    id: 'r4',
+    title: '부동산 PF 리스크, 청년 전세 시장에 미치는 영향',
+    source: '매일경제',
+    thumbnail: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80',
+    readAt: '3일 전',
+    honey: 25,
+  },
+];
+
+export const mockNotificationSettings: NotificationSetting = {
+  dailyDigest: true,
+  quizReminder: true,
+  streakAlert: false,
+};
+
+export const AVATAR_OPTIONS = [
+  {
+    id: 'default',
+    source: require('@/assets/avatars/default.png'),
+  },
+  {
+    id: 'shy',
+    source: require('@/assets/avatars/shy.png'),
+  },
+  {
+    id: 'fire',
+    source: require('@/assets/avatars/fire.png'),
+  },
+  {
+    id: 'happy',
+    source: require('@/assets/avatars/happy.png'),
+  },
+  {
+    id: 'oops',
+    source: require('@/assets/avatars/wow.png'),
+  },
+];

@@ -12,14 +12,6 @@ import {
   View,
 } from 'react-native';
 
-const CATEGORY_COLOR: Record<TermDefinition['category'], { bg: string; text: string }> = {
-  경제: { bg: '#EAF6F9', text: '#0e7fa3' },
-  정책: { bg: '#EDF7EE', text: '#2a7a35' },
-  금융: { bg: '#FFF8E6', text: '#b8720a' },
-  창업: { bg: '#F3EEFF', text: '#6b3fa0' },
-  일반: { bg: '#F0EEEC', text: '#555' },
-};
-
 type Props = {
   term: TermDefinition | null;
   isSaved: boolean;
@@ -69,8 +61,6 @@ export default function TermModal({ term, isSaved, onSave, onClose }: Props) {
 
   if (!term) return null;
 
-  const color = CATEGORY_COLOR[term.category];
-
   return (
     <Modal transparent visible={!!term} onRequestClose={handleClose} animationType="none">
       {/* Backdrop */}
@@ -107,21 +97,6 @@ export default function TermModal({ term, isSaved, onSave, onClose }: Props) {
                 }}
               >
                 <View style={{ flex: 1, marginRight: 12 }}>
-                  {/* Category badge */}
-                  <View
-                    style={{
-                      alignSelf: 'flex-start',
-                      backgroundColor: color.bg,
-                      paddingHorizontal: 10,
-                      paddingVertical: 3,
-                      borderRadius: 20,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: color.text }}>
-                      {term.category}
-                    </Text>
-                  </View>
                   <Text
                     style={{
                       fontSize: 22,

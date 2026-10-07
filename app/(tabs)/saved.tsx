@@ -1,7 +1,7 @@
 import { GlassChip } from '@/components/common/glass';
 import SectionHeader from '@/components/common/SectionHeader';
 import { useNewsDetail } from '@/context/NewsDetailContext';
-import { mockReadHistory, mockSavedTerms } from '@/mocks/mypageMock';
+import { mockReadHistory, mockSavedTerms } from '@/utils/mock';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useRef } from 'react';

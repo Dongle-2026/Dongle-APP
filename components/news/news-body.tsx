@@ -17,8 +17,6 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
   const [showVocab, setShowVocab] = useState(false);
 
   const allQuizAnswered = quizResults.length === data.quizzes.length;
-  const totalEarnedHoney = quizResults.reduce((sum, r) => sum + r.earnedHoney, 0);
-  const correctCount = quizResults.filter((r) => r.isCorrect).length;
 
   const handleSaveTerm = (term: TermDefinition) => {
     setSavedTerms((prev) => new Set(prev).add(term.term));
@@ -180,18 +178,6 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
                       <Text style={{ fontSize: 14, fontWeight: '700', color: '#22272B' }}>
                         {term.term}
                       </Text>
-                      <View
-                        style={{
-                          backgroundColor: '#EAF6F9',
-                          borderRadius: 6,
-                          paddingHorizontal: 6,
-                          paddingVertical: 1,
-                        }}
-                      >
-                        <Text style={{ fontSize: 10, color: '#0e7fa3', fontWeight: '600' }}>
-                          {term.category}
-                        </Text>
-                      </View>
                     </View>
                     <Text
                       style={{ fontSize: 12, color: '#898989', lineHeight: 18 }}

@@ -3,8 +3,7 @@
 import CategorySlider from '@/components/category-slider';
 import { GlassCard } from '@/components/common/glass';
 import SearchMorphBar from '@/components/search/SearchMorphBar';
-import { RECENT_SEARCHES, TRENDING_KEYWORDS } from '@/mocks/searchMock';
-import { CATEGORIES, KEYWORD_NEWS } from '@/utils/mock';
+import { CATEGORIES, KEYWORD_NEWS, RECENT_SEARCHES, TRENDING_KEYWORDS } from '@/utils/mock';
 import { router } from 'expo-router';
 import { ArrowRight, Clock, Minus, Search, TrendingDown, TrendingUp, X } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';

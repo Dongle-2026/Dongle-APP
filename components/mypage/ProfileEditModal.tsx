@@ -1,20 +1,20 @@
-import { AVATAR_OPTIONS } from '@/mocks/mypageMock';
 import type { UserProfile } from '@/types/mypage';
+import { AVATAR_OPTIONS } from '@/utils/mock';
 import { X } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    Dimensions,
-    Image,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Pressable,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Animated,
+  Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 type Props = {

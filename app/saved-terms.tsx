@@ -1,6 +1,6 @@
 import DetailHeader from '@/components/common/DetailHeader';
 import { GlassCard, GlassSurface, glass } from '@/components/common/glass';
-import { mockSavedTerms } from '@/mocks/mypageMock';
+import { mockSavedTerms } from '@/utils/mock';
 import { Stack } from 'expo-router';
 import { BookOpen } from 'lucide-react-native';
 import { useMemo, useRef } from 'react';
