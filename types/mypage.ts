@@ -5,6 +5,7 @@ export type UserProfile = {
   nickname: string;
   bio: string;
   avatarId: string;
+  profileImageUrl?: string | null;
   oauthProvider: 'kakao' | 'google' | 'apple';
   joinedAt: string;
 };
@@ -69,4 +70,21 @@ export type NotificationSetting = {
   dailyDigest: boolean; // 오늘의 뉴스 알림
   quizReminder: boolean; // 퀴즈 리마인더
   streakAlert: boolean; // 스트릭 위기 알림
+};
+
+export type PickedImage = {
+  uri: string; // file:// 로컬 경로
+  mimeType?: string;
+  fileName?: string | null;
+  fileSize?: number;
+  width?: number;
+  height?: number;
+};
+
+export type ProfileEditInput = {
+  nickname: string;
+  bio: string;
+  avatarId: string;
+  /** undefined = 사진 변경 없음 / PickedImage = 새 사진 업로드 / null = 사진 삭제(아바타로 복귀) */
+  image?: PickedImage | null;
 };
