@@ -1,3 +1,5 @@
+export type SaveAction = 'save' | 'unsave';
+
 export interface Slide {
   id: string;
   type: 'thumbnail' | 'content';
@@ -29,5 +31,8 @@ export interface ApiError {
   message: string;
 }
 
-//추가해야함
-export interface UserAction {}
+export interface UserAction {
+  newsId: string;
+  action: SaveAction;
+  timestamp: string;
+}
