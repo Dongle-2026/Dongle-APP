@@ -16,10 +16,11 @@ type Props = {
   term: TermDefinition | null;
   isSaved: boolean;
   onSave: (term: TermDefinition) => void;
+  onUnsave?: (term: TermDefinition) => void;
   onClose: () => void;
 };
 
-export default function TermModal({ term, isSaved, onSave, onClose }: Props) {
+export default function TermModal({ term, isSaved, onSave, onUnsave, onClose }: Props) {
   const slideAnim = useRef(new Animated.Value(300)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
 
@@ -166,7 +167,7 @@ export default function TermModal({ term, isSaved, onSave, onClose }: Props) {
 
               {/* Save button */}
               <TouchableOpacity
-                onPress={() => !isSaved && onSave(term)}
+                onPress={() => (isSaved ? onUnsave?.(term) : onSave(term))}
                 activeOpacity={0.8}
                 style={{
                   flexDirection: 'row',
@@ -186,7 +187,11 @@ export default function TermModal({ term, isSaved, onSave, onClose }: Props) {
                     color: isSaved ? '#22272B' : '#fff',
                   }}
                 >
-                  {isSaved ? '저장된 용어예요' : '내 용어장에 저장하기'}
+                  {isSaved
+                    ? onUnsave
+                      ? '저장 해제하기'
+                      : '저장된 용어예요'
+                    : '내 용어장에 저장하기'}
                 </Text>
               </TouchableOpacity>
             </View>

@@ -1,5 +1,6 @@
 import HighlightedText from '@/components/learning/highlight-text';
 import TermModal from '@/components/learning/term-modal';
+import { useTermSave } from '@/hooks/use-term-save';
 import type { NewsBodyData, QuizResult, TermDefinition } from '@/types/learning';
 import { BookOpen, ChevronDown, ChevronRight, ChevronUp, Tag } from 'lucide-react-native';
 import { useState } from 'react';
@@ -13,14 +14,14 @@ type Props = {
 
 export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
   const [activeTerm, setActiveTerm] = useState<TermDefinition | null>(null);
-  const [savedTerms, setSavedTerms] = useState<Set<string>>(new Set());
   const [showVocab, setShowVocab] = useState(false);
+  const {
+    isSaved: isTermSaved,
+    save,
+    unsave,
+  } = useTermSave(data.terms.filter((t) => t.isSaved).map((t) => t.id));
 
   const allQuizAnswered = quizResults.length === data.quizzes.length;
-
-  const handleSaveTerm = (term: TermDefinition) => {
-    setSavedTerms((prev) => new Set(prev).add(term.term));
-  };
 
   return (
     <View>
@@ -136,7 +137,7 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
         {showVocab && (
           <View style={{ gap: 8 }}>
             {data.terms.map((term) => {
-              const isSaved = savedTerms.has(term.term);
+              const isSaved = isTermSaved(term.id);
               return (
                 <TouchableOpacity
                   key={term.term}
@@ -288,8 +289,9 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
       {/* ── Term Modal ── */}
       <TermModal
         term={activeTerm}
-        isSaved={activeTerm ? savedTerms.has(activeTerm.term) : false}
-        onSave={handleSaveTerm}
+        isSaved={activeTerm ? isTermSaved(activeTerm.id) : false}
+        onSave={save}
+        onUnsave={unsave}
         onClose={() => setActiveTerm(null)}
       />
     </View>

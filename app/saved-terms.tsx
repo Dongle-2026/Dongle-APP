@@ -1,10 +1,13 @@
 import DetailHeader from '@/components/common/DetailHeader';
 import { GlassCard, GlassSurface, glass } from '@/components/common/glass';
-import { mockSavedTerms } from '@/utils/mock';
+import TermModal from '@/components/learning/term-modal';
+import { useTermSave } from '@/hooks/use-term-save';
+import type { TermDefinition } from '@/types/learning';
+import { mockSavedTerms } from '@/utils/mock'; // TODO: 저장한 용어 API로 교체 (TermDefinition[] 형태: id/term/definition/example)
 import { Stack } from 'expo-router';
 import { BookOpen } from 'lucide-react-native';
-import { useMemo, useRef } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CHO = [
@@ -61,16 +64,20 @@ export default function SavedTermsScreen() {
   const scroll = useRef<ScrollView>(null);
   const ys = useRef<Record<string, number>>({});
 
+  const [terms, setTerms] = useState<TermDefinition[]>(mockSavedTerms as TermDefinition[]);
+  const [activeTerm, setActiveTerm] = useState<TermDefinition | null>(null);
+  const { isSaved, save, unsave, savedIds } = useTermSave(terms.map((t) => t.id));
+
   const groups = useMemo(() => {
-    const m = new Map<string, typeof mockSavedTerms>();
-    [...mockSavedTerms]
+    const m = new Map<string, TermDefinition[]>();
+    [...terms]
       .sort((a, b) => a.term.localeCompare(b.term, 'ko'))
       .forEach((t) => {
         const k = initial(t.term);
         m.set(k, [...(m.get(k) ?? []), t]);
       });
     return RAIL.filter((k) => m.has(k)).map((k) => ({ k, items: m.get(k)! }));
-  }, []);
+  }, [terms]);
   const has = new Set(groups.map((g) => g.k));
 
   const jump = (k: string) => {
@@ -78,12 +85,18 @@ export default function SavedTermsScreen() {
       scroll.current?.scrollTo({ y: Math.max((ys.current[k] ?? 0) - 8, 0), animated: true });
   };
 
+  // 모달에서 저장 해제한 용어는 모달이 닫힐 때 목록에서 제거 (열려 있는 동안 목록이 흔들리지 않게)
+  const closeModal = () => {
+    setActiveTerm(null);
+    setTerms((prev) => prev.filter((t) => savedIds.has(t.id)));
+  };
+
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: '#F9F9F9' }}>
       <Stack.Screen
         options={{ headerShown: false, animation: 'slide_from_right', gestureEnabled: true }}
       />
-      <DetailHeader title="저장한 용어" subtitle={`${mockSavedTerms.length}개`} />
+      <DetailHeader title="저장한 용어" subtitle={`${terms.length}개`} />
 
       <ScrollView
         ref={scroll}
@@ -110,8 +123,11 @@ export default function SavedTermsScreen() {
             </Text>
             <GlassCard padding={0} radius={22} shadow="sm">
               {items.map((t, i) => (
-                <View
+                <TouchableOpacity
                   key={t.id}
+                  onPress={() => setActiveTerm(t)} // 탭하면 TermModal
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t.term} 뜻 보기`}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -126,7 +142,7 @@ export default function SavedTermsScreen() {
                   <Text style={{ fontSize: 16, fontWeight: '600', color: glass.ink }}>
                     {t.term}
                   </Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </GlassCard>
           </View>
@@ -159,6 +175,14 @@ export default function SavedTermsScreen() {
           ))}
         </GlassSurface>
       </View>
+
+      <TermModal
+        term={activeTerm}
+        isSaved={activeTerm ? isSaved(activeTerm.id) : false}
+        onSave={save}
+        onUnsave={unsave}
+        onClose={closeModal}
+      />
     </SafeAreaView>
   );
 }

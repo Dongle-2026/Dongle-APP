@@ -34,6 +34,7 @@ export type SavedTerm = {
   id: string;
   term: string;
   definition: string;
+  example?: string;
 };
 
 export type ReadHistory = {
