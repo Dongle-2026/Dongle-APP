@@ -4,7 +4,6 @@ export type TermDefinition = {
   term: string;
   definition: string;
   example?: string;
-  category: '경제' | '정책' | '금융' | '창업' | '일반';
 };
 
 export type QuizChoice = {
@@ -21,6 +20,7 @@ export type Quiz = {
   honey: number; // 획득 꿀 포인트
 };
 
+// 본문 내용 섹션 분리
 export type NewsBodySection = {
   id: string;
   subtitle: string;
@@ -30,7 +30,7 @@ export type NewsBodySection = {
 export type NewsBodyData = {
   newsId: string;
   intro: string;
-  source: string;
+  source: string; // 출처
   publishedAt: string;
   sections: NewsBodySection[];
   terms: TermDefinition[];
@@ -43,13 +43,4 @@ export type QuizResult = {
   selectedIndex: number;
   isCorrect: boolean;
   earnedHoney: number;
-};
-
-export type LearningSession = {
-  newsId: string;
-  startedAt: Date;
-  completedReading: boolean;
-  quizResults: QuizResult[];
-  totalEarnedHoney: number;
-  savedTerms: string[];
 };

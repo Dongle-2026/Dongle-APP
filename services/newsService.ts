@@ -8,8 +8,8 @@ const generateSlides = (id: number): Slide[] => {
 
   return baseSlides.map((slide, idx) => ({
     id: `slide-${id}-${idx}`,
-    type: slide.type as 'image' | 'content',
-    image: slide.type === 'image' ? imageUrl : undefined,
+    type: slide.type as 'thumbnail' | 'content',
+    image: slide.type === 'thumbnail' ? imageUrl : undefined,
     title: slide.title || '',
     description: slide.description || '',
   }));
@@ -44,7 +44,6 @@ const generateMockNews = (page: number, limit: number): CardNews[] => {
       content: '이 기사의 전체 내용입니다. 더 자세한 정보가 포함되어 있습니다.',
       image: MOCK_IMAGES[id % MOCK_IMAGES.length],
       category: '전체',
-      tags: ['추천', '최신', '핫'],
       createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
       updatedAt: new Date().toISOString(),
       url: `https://example.com/news/${id}`,

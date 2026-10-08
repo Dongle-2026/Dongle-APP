@@ -30,39 +30,18 @@ export type ActivityDay = {
   honey: number;
 };
 
-export type BadgeId =
-  | 'first_read'
-  | 'streak_7'
-  | 'streak_30'
-  | 'quiz_master'
-  | 'term_collector'
-  | 'sharer'
-  | 'early_bird'
-  | 'night_owl';
-
-export type Badge = {
-  id: BadgeId;
-  emoji: string;
-  label: string;
-  description: string;
-  unlockedAt: string | null; // null이면 미획득
-};
-
 export type SavedTerm = {
   id: string;
   term: string;
   definition: string;
-  category: string;
-  savedAt: string;
 };
 
 export type ReadHistory = {
   id: string;
   title: string;
-  source: string;
   thumbnail: string;
   readAt: string;
-  honey: number;
+  honey: number; // 획득한 꿀
 };
 
 export type NotificationSetting = {

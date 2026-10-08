@@ -3,6 +3,7 @@ import SectionHeader from '@/components/common/SectionHeader';
 import ActivityHeatmap from '@/components/mypage/ActivityHeatmap';
 import ProfileEditModal from '@/components/mypage/ProfileEditModal';
 import SettingsModal from '@/components/mypage/SettingsModal';
+import type { NotificationSetting, UserProfile } from '@/types/mypage';
 import {
   AVATAR_OPTIONS,
   mockActivityData,
@@ -10,8 +11,7 @@ import {
   mockMyActivity,
   mockNotificationSettings,
   mockProfile,
-} from '@/mocks/mypageMock';
-import type { NotificationSetting, UserProfile } from '@/types/mypage';
+} from '@/utils/mock';
 import { Flame, LucideIcon, Newspaper, Settings, Share, Trophy } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, ScrollView, Text, View } from 'react-native';
