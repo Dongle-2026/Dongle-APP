@@ -1,6 +1,7 @@
 import { glass, GlassCard, GlassChip, GlassIconButton } from '@/components/common/glass';
 import SectionHeader from '@/components/common/SectionHeader';
 import ActivityHeatmap from '@/components/mypage/ActivityHeatmap';
+import ProfileAvatar from '@/components/mypage/ProfileAvatar';
 import ProfileEditModal from '@/components/mypage/ProfileEditModal';
 import SettingsModal from '@/components/mypage/SettingsModal';
 import {
@@ -11,10 +12,11 @@ import {
   mockNotificationSettings,
   mockProfile,
 } from '@/mocks/mypageMock';
-import type { NotificationSetting, UserProfile } from '@/types/mypage';
+import { profileService } from '@/services/profileService';
+import type { NotificationSetting, ProfileEditInput, UserProfile } from '@/types/mypage';
 import { Flame, LucideIcon, Newspaper, Settings, Share, Trophy } from 'lucide-react-native';
 import { useState } from 'react';
-import { Image, ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // ─── 작은 유틸 컴포넌트들 ────────────────────────────────────────────────────
@@ -72,8 +74,22 @@ export default function MypageScreen() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  const handleProfileSave = (updated: Pick<UserProfile, 'nickname' | 'bio' | 'avatarId'>) => {
-    setProfile((prev) => ({ ...prev, ...updated }));
+  const handleProfileSave = async (input: ProfileEditInput) => {
+    const prev = profile;
+    setProfile((p) => ({
+      ...p,
+      nickname: input.nickname,
+      bio: input.bio,
+      avatarId: input.avatarId,
+      // 새 사진은 업로드가 끝나기 전까지 로컬 uri로 먼저 보여줌
+      profileImageUrl: input.image === undefined ? p.profileImageUrl : (input.image?.uri ?? null),
+    }));
+    try {
+      setProfile(await profileService.updateProfile(prev, input));
+    } catch {
+      setProfile(prev);
+      Alert.alert('저장 실패', '프로필을 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
+    }
   };
 
   const selectedAvatar = AVATAR_OPTIONS.find((avatar) => avatar.id === profile.avatarId);
@@ -112,20 +128,12 @@ export default function MypageScreen() {
 
         <GlassCard style={{ paddingHorizontal: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 16 }}>
-            <View
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 22,
-                backgroundColor: glass.inkFaint,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {selectedAvatar && (
-                <Image source={selectedAvatar.source} style={{ width: 48, height: 55 }} />
-              )}
-            </View>
+            <ProfileAvatar
+              uri={profile.profileImageUrl}
+              avatarSource={selectedAvatar?.source}
+              size={72}
+              radius={22}
+            />
             <View style={{ flex: 1 }}>
               <View
                 style={{
