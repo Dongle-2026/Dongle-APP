@@ -1,8 +1,10 @@
-import type { UserProfile } from '@/types/mypage';
+import ProfileAvatar from '@/components/mypage/ProfileAvatar';
+import type { PickedImage, ProfileEditInput, UserProfile } from '@/types/mypage';
 import { AVATAR_OPTIONS } from '@/utils/mock';
-import { X } from 'lucide-react-native';
+import { ImagePlus, X } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   Animated,
   Dimensions,
   Image,
@@ -17,10 +19,14 @@ import {
   View,
 } from 'react-native';
 
+import * as ImagePicker from 'expo-image-picker';
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB (서버 제한에 맞게 조정)
+
 type Props = {
   visible: boolean;
   profile: UserProfile;
-  onSave: (updated: Pick<UserProfile, 'nickname' | 'bio' | 'avatarId'>) => void;
+  onSave: (input: ProfileEditInput) => void | Promise<void>;
   onClose: () => void;
 };
 
@@ -29,6 +35,8 @@ export default function ProfileEditModal({ visible, profile, onSave, onClose }: 
   const [bio, setBio] = useState(profile.bio);
   const [selectedAvatar, setSelectedAvatar] = useState(profile.avatarId);
   const selectedAvatarData = AVATAR_OPTIONS.find((avatar) => avatar.id === selectedAvatar);
+  const [photoUri, setPhotoUri] = useState<string | null>(profile.profileImageUrl ?? null); // 화면 표시용 (서버 URL 또는 로컬 uri)
+  const [picked, setPicked] = useState<PickedImage | null>(null); // 새로 고른 로컬 이미지 (업로드 대상)
 
   const slideAnim = useRef(new Animated.Value(600)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -38,6 +46,8 @@ export default function ProfileEditModal({ visible, profile, onSave, onClose }: 
       setNickname(profile.nickname);
       setBio(profile.bio);
       setSelectedAvatar(profile.avatarId);
+      setPhotoUri(profile.profileImageUrl ?? null);
+      setPicked(null);
       Animated.parallel([
         Animated.spring(slideAnim, {
           toValue: 0,
@@ -53,6 +63,41 @@ export default function ProfileEditModal({ visible, profile, onSave, onClose }: 
     }
   }, [visible]);
 
+  const pickImage = async () => {
+    try {
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'], // SDK 52+. 이전 버전은 ImagePicker.MediaTypeOptions.Images
+        allowsEditing: true,
+        aspect: [1, 1], // 프로필은 정사각형으로 크롭
+        quality: 0.8, // 용량 절감
+      });
+      if (res.canceled) return;
+      const a = res.assets[0];
+      if (a.fileSize && a.fileSize > MAX_IMAGE_BYTES) {
+        Alert.alert('이미지가 너무 커요', '5MB 이하의 사진을 선택해주세요.');
+        return;
+      }
+      setPicked({
+        uri: a.uri,
+        mimeType: a.mimeType,
+        fileName: a.fileName,
+        fileSize: a.fileSize,
+        width: a.width,
+        height: a.height,
+      });
+      setPhotoUri(a.uri);
+    } catch {
+      Alert.alert('사진을 불러오지 못했어요', '잠시 후 다시 시도해주세요.');
+    }
+  };
+
+  // 아바타를 고르면 사진은 해제 (= 서버에는 사진 삭제로 전달)
+  const selectAvatar = (id: string) => {
+    setSelectedAvatar(id);
+    setPhotoUri(null);
+    setPicked(null);
+  };
+
   const handleClose = () => {
     Animated.parallel([
       Animated.timing(slideAnim, { toValue: 600, duration: 240, useNativeDriver: true }),
@@ -62,7 +107,12 @@ export default function ProfileEditModal({ visible, profile, onSave, onClose }: 
 
   const handleSave = () => {
     if (!nickname.trim()) return;
-    onSave({ nickname: nickname.trim(), bio: bio.trim(), avatarId: selectedAvatar });
+    const image: ProfileEditInput['image'] = picked
+      ? picked
+      : photoUri === null && profile.profileImageUrl
+        ? null
+        : undefined;
+    onSave({ nickname: nickname.trim(), bio: bio.trim(), avatarId: selectedAvatar, image });
     handleClose();
   };
 
@@ -134,28 +184,19 @@ export default function ProfileEditModal({ visible, profile, onSave, onClose }: 
                   </Text>
                   {/* Big preview */}
                   <View style={{ alignItems: 'center', marginBottom: 16 }}>
-                    <View
-                      style={{
-                        width: 80,
-                        height: 80,
-                        borderRadius: 24,
-                        backgroundColor: '#FFF8D6',
-                        borderWidth: 3,
-                        borderColor: '#FFDC53',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
+                    <ProfileAvatar
+                      uri={photoUri}
+                      avatarSource={selectedAvatarData?.source}
+                      size={80}
+                      radius={24}
+                      bg="#FFF8D6"
+                      style={{ borderWidth: 3, borderColor: '#FFDC53' }}
+                    />
+                    <Text
+                      style={{ fontSize: 12, color: '#898989', textAlign: 'center', marginTop: 10 }}
                     >
-                      {selectedAvatarData && (
-                        <Image
-                          source={selectedAvatarData.source}
-                          style={{
-                            width: 48,
-                            height: 55,
-                          }}
-                        />
-                      )}
-                    </View>
+                      갤러리 사진을 고르면 아바타 대신 표시돼요
+                    </Text>
                   </View>
                   {/* Avatar grid */}
                   <View
@@ -166,31 +207,59 @@ export default function ProfileEditModal({ visible, profile, onSave, onClose }: 
                       justifyContent: 'center',
                     }}
                   >
-                    {AVATAR_OPTIONS.map((avatar) => (
-                      <TouchableOpacity
-                        key={avatar.id}
-                        onPress={() => setSelectedAvatar(avatar.id)}
-                        activeOpacity={0.7}
-                        style={{
-                          width: 58,
-                          height: 58,
-                          borderRadius: 14,
-                          backgroundColor: selectedAvatar === avatar.id ? '#FFF8D6' : '#F9F9F9',
-                          borderWidth: selectedAvatar === avatar.id ? 2 : 1,
-                          borderColor: selectedAvatar === avatar.id ? '#FFDC53' : '#F0EEEC',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
+                    <TouchableOpacity
+                      onPress={pickImage}
+                      activeOpacity={0.7}
+                      accessibilityLabel="갤러리에서 사진 선택"
+                      style={{
+                        width: 58,
+                        height: 58,
+                        borderRadius: 14,
+                        overflow: 'hidden',
+                        backgroundColor: photoUri ? '#FFF8D6' : '#F9F9F9',
+                        borderWidth: photoUri ? 2 : 1,
+                        borderColor: photoUri ? '#FFDC53' : '#F0EEEC',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {photoUri ? (
                         <Image
-                          source={avatar.source}
-                          style={{
-                            width: 43,
-                            height: 50,
-                          }}
+                          source={{ uri: photoUri }}
+                          style={{ width: '100%', height: '100%' }}
                         />
-                      </TouchableOpacity>
-                    ))}
+                      ) : (
+                        <ImagePlus size={22} color="#898989" />
+                      )}
+                    </TouchableOpacity>
+                    {AVATAR_OPTIONS.map((avatar) => {
+                      const active = !photoUri && selectedAvatar === avatar.id;
+                      return (
+                        <TouchableOpacity
+                          key={avatar.id}
+                          onPress={() => selectAvatar(avatar.id)}
+                          activeOpacity={0.7}
+                          style={{
+                            width: 58,
+                            height: 58,
+                            borderRadius: 14,
+                            backgroundColor: selectedAvatar === avatar.id ? '#FFF8D6' : '#F9F9F9',
+                            borderWidth: selectedAvatar === avatar.id ? 2 : 1,
+                            borderColor: selectedAvatar === avatar.id ? '#FFDC53' : '#F0EEEC',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Image
+                            source={avatar.source}
+                            style={{
+                              width: 43,
+                              height: 50,
+                            }}
+                          />
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 </View>
 
