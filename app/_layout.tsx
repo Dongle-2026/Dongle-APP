@@ -39,7 +39,7 @@ function NewsDetailPortal() {
     >
       <NewsDetail
         newsId={current.newsId}
-        thumbnail={current.thumbnail}
+        image={current.image}
         title={current.title}
         cardRef={current.cardRef}
         onClose={close}
