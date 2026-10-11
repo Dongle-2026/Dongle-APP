@@ -1,11 +1,5 @@
 import type { NewsBodyData } from '@/types/learning';
 
-// 홈 헤더
-export const mockHomeHeaderData = {
-  streak: 12,
-  todayHoney: 30,
-};
-
 export const MOCK_IMAGES = [
   'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1080&h=600&fit=crop',
   'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1080&h=600&fit=crop',
@@ -296,12 +290,12 @@ export const TRENDING_KEYWORDS = [
 
 import type {
   ActivityDay,
-  LearningStats,
-  MyActivity,
   NotificationSetting,
   ReadHistory,
   SavedTerm,
+  UserActivity,
   UserProfile,
+  UserStats,
 } from '@/types/mypage';
 
 export const mockProfile: UserProfile = {
@@ -313,18 +307,18 @@ export const mockProfile: UserProfile = {
   joinedAt: '2025.03.14',
 };
 
-export const mockLearningStats: LearningStats = {
+export const mockUserStats: UserStats = {
+  todayHoney: 12,
   streak: 12,
   readNewsCount: 80,
-  totalQuizCount: 80,
+  quizCount: 80,
+  correctCount: 60,
   totalHoney: 1_240,
 };
 
-export const mockMyActivity: MyActivity = {
-  correctRate: 85,
-  totalQuizCount: 80,
-  interestedCategories: ['경제', '투자', '금융'],
-  weakCategories: ['부동산', '세금'],
+export const mockUserActivity: UserActivity = {
+  interests: ['경제', '투자', '금융'],
+  weaks: ['부동산', '세금'],
 };
 
 // 최근 18주(126일) 활동 데이터 생성

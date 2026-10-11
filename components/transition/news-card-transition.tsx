@@ -3,11 +3,11 @@ import type { ReactNode, RefObject } from 'react';
 import { forwardRef, useEffect, useImperativeHandle } from 'react';
 import { Dimensions, Image, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
-    Easing,
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 
 export type NewsCardTransitionRef = {
@@ -15,7 +15,7 @@ export type NewsCardTransitionRef = {
 };
 
 type NewsCardTransitionProps = {
-  thumbnail: string;
+  image: string;
   title: string;
   cardRef: RefObject<View | null>;
   onClose: () => void;
@@ -26,7 +26,7 @@ const DETAIL_X = 0;
 const DETAIL_Y = 0;
 
 const NewsCardTransition = forwardRef<NewsCardTransitionRef, NewsCardTransitionProps>(
-  ({ thumbnail, title, cardRef, onClose, children }, ref) => {
+  ({ image, title, cardRef, onClose, children }, ref) => {
     const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
     // 카드 → 전체화면 진행도
@@ -164,7 +164,7 @@ const NewsCardTransition = forwardRef<NewsCardTransitionRef, NewsCardTransitionP
           <View className="flex-1 h-full w-full bg-mono-100">
             {/* 닫을 때 보여줄 원래 썸네일 */}
             <Animated.View style={thumbnailAnimatedStyle} className="absolute inset-0">
-              <Image source={{ uri: thumbnail }} className="h-full w-full" resizeMode="cover" />
+              <Image source={{ uri: image }} className="h-full w-full" resizeMode="cover" />
 
               <LinearGradient
                 colors={['rgba(0,0,0,0.01)', 'rgba(0,0,0,0.05)', 'rgba(0,0,0,0.8)']}

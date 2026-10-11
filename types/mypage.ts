@@ -6,22 +6,22 @@ export type UserProfile = {
   bio: string;
   avatarId: string;
   profileImageUrl?: string | null;
-  oauthProvider: 'kakao' | 'google' | 'apple';
+  oauthProvider: 'kakao' | 'naver';
   joinedAt: string;
 };
 
-export type LearningStats = {
+export type UserStats = {
+  todayHoney: number;
   streak: number;
   readNewsCount: number;
-  totalQuizCount: number;
+  quizCount: number;
+  correctCount: number;
   totalHoney: number;
 };
 
-export type MyActivity = {
-  correctRate: number;
-  totalQuizCount: number;
-  interestedCategories: string[];
-  weakCategories: string[];
+export type UserActivity = {
+  interests: string[];
+  weaks: string[];
 };
 
 // 잔디처럼 날짜별 활동량 (0~4: 없음~많음)
@@ -41,7 +41,7 @@ export type SavedTerm = {
 export type ReadHistory = {
   id: string;
   title: string;
-  thumbnail: string;
+  image: string;
   readAt: string;
   honey: number; // 획득한 꿀
 };

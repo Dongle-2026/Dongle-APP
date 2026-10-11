@@ -1,4 +1,4 @@
-import { mockHomeHeaderData, mockProfile } from '@/utils/mock';
+import { mockProfile, mockUserStats } from '@/utils/mock';
 import { router } from 'expo-router';
 import { Image, Text, View } from 'react-native';
 import { GlassCard, GlassChip, glass } from '../common/glass';
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function HomeHeader({ topInset = 52 }: Props) {
-  const { streak, todayHoney } = mockHomeHeaderData;
+  const { streak, todayHoney } = mockUserStats;
 
   return (
     <>
