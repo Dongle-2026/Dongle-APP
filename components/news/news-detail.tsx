@@ -8,7 +8,7 @@ import type { CardNews } from '@/types';
 import type { QuizResult } from '@/types/learning';
 import { newsBodyMock } from '@/utils/mock';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Share2, X } from 'lucide-react-native';
+import { Bookmark, Share2, X } from 'lucide-react-native';
 import type { RefObject } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Image, ScrollView, Share, Text, View } from 'react-native';
@@ -18,19 +18,13 @@ import QuizMode from '../quiz/QuizMode';
 
 type NewsDetailProps = {
   newsId: string;
-  thumbnail: string;
+  image: string;
   title: string;
   cardRef: RefObject<View | null>;
   onClose: () => void;
 };
 
-export default function NewsDetail({
-  newsId,
-  thumbnail,
-  title,
-  cardRef,
-  onClose,
-}: NewsDetailProps) {
+export default function NewsDetail({ newsId, image, title, cardRef, onClose }: NewsDetailProps) {
   const [news, setNews] = useState<CardNews | null>(null);
   const [isClosing, setIsClosing] = useState(false);
   const bodyData = { ...newsBodyMock, newsId }; // 기존 줄을 위로 이동
@@ -39,6 +33,9 @@ export default function NewsDetail({
   const quizDone = quizResults.length === bodyData.quizzes.length;
   const cta = useQuizCTA(bodyData.quizzes.length > 0 && !quizDone && !quizMode, 480);
   const maxHoney = bodyData.quizzes.reduce((s, q) => s + q.honey, 0);
+
+  const [isSaved, setIsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const insets = useSafeAreaInsets();
 
@@ -49,17 +46,37 @@ export default function NewsDetail({
     setIsClosing(false);
     setQuizResults([]);
     setQuizMode(false);
+    setIsSaved(false);
     cta.reset();
 
     newsService
       .getNewsById(newsId)
       .then((response) => {
         setNews(response.data || null);
+        setIsSaved(!!response.data?.isSaved);
       })
       .catch((error) => {
         console.error('뉴스 상세 조회 에러:', error);
       });
   }, [newsId]);
+
+  const handleSave = async () => {
+    if (!news || saving) return;
+    const next = !isSaved;
+    setIsSaved(next);
+    setSaving(true);
+    try {
+      const res = next
+        ? await newsService.saveNews(news.id)
+        : await newsService.unsaveNews(news.id);
+      if (res.status >= 400) throw new Error(`status ${res.status}`);
+    } catch {
+      setIsSaved(!next);
+      Alert.alert(next ? '저장 실패' : '저장 해제 실패', '잠시 후 다시 시도해주세요.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleClose = () => {
     if (isClosing) return;
@@ -92,7 +109,7 @@ export default function NewsDetail({
   return (
     <NewsCardTransition
       ref={transitionRef}
-      thumbnail={thumbnail}
+      image={image}
       title={title}
       cardRef={cardRef}
       onClose={() => {
@@ -114,6 +131,12 @@ export default function NewsDetail({
               gap: 12,
             }}
           >
+            <GlassIconButton
+              icon={Bookmark}
+              label={isSaved ? '저장 해제' : '저장'}
+              onPress={handleSave}
+              variant={isSaved ? 'solid' : 'glass'}
+            />
             <GlassIconButton icon={Share2} label="공유" onPress={handleShare} />
             <GlassIconButton icon={X} label="닫기" onPress={handleClose} />
           </View>

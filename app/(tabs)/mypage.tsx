@@ -4,16 +4,17 @@ import ActivityHeatmap from '@/components/mypage/ActivityHeatmap';
 import ProfileAvatar from '@/components/mypage/ProfileAvatar';
 import ProfileEditModal from '@/components/mypage/ProfileEditModal';
 import SettingsModal from '@/components/mypage/SettingsModal';
+
+import { profileService } from '@/services/profileService';
+import type { NotificationSetting, ProfileEditInput, UserProfile } from '@/types/mypage';
 import {
   AVATAR_OPTIONS,
   mockActivityData,
-  mockLearningStats,
-  mockMyActivity,
   mockNotificationSettings,
   mockProfile,
-} from '@/mocks/mypageMock';
-import { profileService } from '@/services/profileService';
-import type { NotificationSetting, ProfileEditInput, UserProfile } from '@/types/mypage';
+  mockUserActivity,
+  mockUserStats
+} from '@/utils/mock';
 import { Flame, LucideIcon, Newspaper, Settings, Share, Trophy } from 'lucide-react-native';
 import { useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
@@ -93,6 +94,7 @@ export default function MypageScreen() {
   };
 
   const selectedAvatar = AVATAR_OPTIONS.find((avatar) => avatar.id === profile.avatarId);
+  const correctRate = Math.round((mockUserStats.correctCount / mockUserStats.quizCount) * 100);
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={{ backgroundColor: '#F9F9F9' }}>
@@ -162,18 +164,9 @@ export default function MypageScreen() {
           <View style={{ height: 1, backgroundColor: glass.inkFaint, marginVertical: 16 }} />
           {/* 핵심 스탯 4개 */}
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <StatPill
-              icon={Flame}
-              label="연속 학습"
-              accent
-              value={`${mockLearningStats.streak}일`}
-            />
-            <StatPill
-              icon={Newspaper}
-              label="읽은 뉴스"
-              value={`${mockLearningStats.readNewsCount}`}
-            />
-            <StatPill icon={Trophy} label="푼 퀴즈" value={`${mockLearningStats.totalQuizCount}`} />
+            <StatPill icon={Flame} label="연속 학습" accent value={`${mockUserStats.streak}일`} />
+            <StatPill icon={Newspaper} label="읽은 뉴스" value={`${mockUserStats.readNewsCount}`} />
+            <StatPill icon={Trophy} label="푼 퀴즈" value={`${mockUserStats.quizCount}`} />
           </View>
         </GlassCard>
 
@@ -190,7 +183,7 @@ export default function MypageScreen() {
                 marginBottom: 12,
               }}
             >
-              {mockLearningStats.totalHoney.toLocaleString()}
+              {mockUserStats.totalHoney.toLocaleString()}
             </Text>
             <Text className="text-mono-500 text-sm">모았어요!</Text>
           </View>
@@ -232,7 +225,7 @@ export default function MypageScreen() {
                     letterSpacing: -1,
                   }}
                 >
-                  {mockMyActivity.correctRate}%
+                  {mockUserStats.quizCount > 0 ? correctRate : 0}%
                 </Text>
               </View>
 
@@ -243,7 +236,7 @@ export default function MypageScreen() {
                   fontWeight: '600',
                 }}
               >
-                총 {mockMyActivity.totalQuizCount}문제
+                총 {mockUserStats.quizCount}문제
               </Text>
             </View>
 
@@ -259,7 +252,7 @@ export default function MypageScreen() {
             >
               <View
                 style={{
-                  width: `${mockMyActivity.correctRate}%`,
+                  width: `${correctRate}%`,
                   height: '100%',
                   backgroundColor: '#FFDC53',
                   borderRadius: 999,
@@ -299,7 +292,7 @@ export default function MypageScreen() {
                   gap: 7,
                 }}
               >
-                {mockMyActivity.interestedCategories.map((category) => (
+                {mockUserActivity.interests.map((category) => (
                   <View
                     key={category}
                     style={{
@@ -344,7 +337,7 @@ export default function MypageScreen() {
                   gap: 7,
                 }}
               >
-                {mockMyActivity.weakCategories.map((category) => (
+                {mockUserActivity.weaks.map((category) => (
                   <View
                     key={category}
                     style={{

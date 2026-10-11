@@ -1,6 +1,7 @@
 import HighlightedText from '@/components/learning/highlight-text';
 import TermModal from '@/components/learning/term-modal';
-import type { NewsBodyData, QuizResult, TermDefinition } from '@/types/learning';
+import { useTermSave } from '@/hooks/use-term-save';
+import type { NewsBodyData, QuizResult, Term } from '@/types/learning';
 import { BookOpen, ChevronDown, ChevronRight, ChevronUp, Tag } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
@@ -12,17 +13,15 @@ type Props = {
 };
 
 export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
-  const [activeTerm, setActiveTerm] = useState<TermDefinition | null>(null);
-  const [savedTerms, setSavedTerms] = useState<Set<string>>(new Set());
+  const [activeTerm, setActiveTerm] = useState<Term | null>(null);
   const [showVocab, setShowVocab] = useState(false);
+  const {
+    isSaved: isTermSaved,
+    save,
+    unsave,
+  } = useTermSave(data.terms.filter((t) => t.isSaved).map((t) => t.id));
 
   const allQuizAnswered = quizResults.length === data.quizzes.length;
-  const totalEarnedHoney = quizResults.reduce((sum, r) => sum + r.earnedHoney, 0);
-  const correctCount = quizResults.filter((r) => r.isCorrect).length;
-
-  const handleSaveTerm = (term: TermDefinition) => {
-    setSavedTerms((prev) => new Set(prev).add(term.term));
-  };
 
   return (
     <View>
@@ -138,7 +137,7 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
         {showVocab && (
           <View style={{ gap: 8 }}>
             {data.terms.map((term) => {
-              const isSaved = savedTerms.has(term.term);
+              const isSaved = isTermSaved(term.id);
               return (
                 <TouchableOpacity
                   key={term.term}
@@ -180,18 +179,6 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
                       <Text style={{ fontSize: 14, fontWeight: '700', color: '#22272B' }}>
                         {term.term}
                       </Text>
-                      <View
-                        style={{
-                          backgroundColor: '#EAF6F9',
-                          borderRadius: 6,
-                          paddingHorizontal: 6,
-                          paddingVertical: 1,
-                        }}
-                      >
-                        <Text style={{ fontSize: 10, color: '#0e7fa3', fontWeight: '600' }}>
-                          {term.category}
-                        </Text>
-                      </View>
                     </View>
                     <Text
                       style={{ fontSize: 12, color: '#898989', lineHeight: 18 }}
@@ -302,8 +289,9 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
       {/* ── Term Modal ── */}
       <TermModal
         term={activeTerm}
-        isSaved={activeTerm ? savedTerms.has(activeTerm.term) : false}
-        onSave={handleSaveTerm}
+        isSaved={activeTerm ? isTermSaved(activeTerm.id) : false}
+        onSave={save}
+        onUnsave={unsave}
         onClose={() => setActiveTerm(null)}
       />
     </View>

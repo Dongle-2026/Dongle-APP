@@ -85,7 +85,7 @@ export default function NewsListScreen() {
     item: (typeof KEYWORD_NEWS)[number],
     cardRef: RefObject<View | null>
   ) => {
-    open({ newsId: item.id, thumbnail: item.image, title: item.keyword, cardRef });
+    open({ newsId: item.id, image: item.image, title: item.keyword, cardRef });
   };
 
   return (

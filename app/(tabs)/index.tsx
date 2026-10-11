@@ -46,7 +46,7 @@ export default function HomeScreen() {
 
   const handleCardPress = (item: CardNews, cardRef: RefObject<View | null>) => {
     if (!item.image || !item.title) return;
-    open({ newsId: item.id, thumbnail: item.image, title: item.title, cardRef });
+    open({ newsId: item.id, image: item.image, title: item.title, cardRef });
   };
 
   const fetchNews = useCallback(async (pageNum = 1, isRefresh = false) => {

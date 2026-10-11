@@ -1,12 +1,22 @@
 // ─── 본문 학습 관련 타입 ──────────────────────────────────────────────────────
 
-export type TermDefinition = {
+export type Term = {
+  id: string; // 서버 용어 id. 저장/해제 API의 키 (지금까지는 term 문자열로 구분 → 중복·표기 변경에 취약)
   term: string;
   definition: string;
   example?: string;
-  category: '경제' | '정책' | '금융' | '창업' | '일반';
+  isSaved?: boolean; // 서버가 내려주는 저장 여부 (초기 상태로 사용)
+  // TODO?: category
 };
 
+// POST /api/terms/:id/save | /unsave 의 응답 data
+export type TermAction = {
+  termId: string;
+  action: 'save' | 'unsave';
+  timestamp: string;
+};
+
+// 본문-퀴즈 풀기
 export type QuizChoice = {
   id: string;
   text: string;
@@ -21,23 +31,14 @@ export type Quiz = {
   honey: number; // 획득 꿀 포인트
 };
 
+// 본문 내용 섹션 분리
 export type NewsBodySection = {
   id: string;
   subtitle: string;
   text: string;
 };
 
-export type NewsBodyData = {
-  newsId: string;
-  intro: string;
-  source: string;
-  publishedAt: string;
-  sections: NewsBodySection[];
-  terms: TermDefinition[];
-  quizzes: Quiz[];
-  tags: string[];
-};
-
+//본문 - 퀴즈 하나 당 결과
 export type QuizResult = {
   quizId: string;
   selectedIndex: number;
@@ -45,11 +46,28 @@ export type QuizResult = {
   earnedHoney: number;
 };
 
-export type LearningSession = {
+export type NewsBodyData = {
   newsId: string;
-  startedAt: Date;
-  completedReading: boolean;
+  intro: string;
+  source: string; // 출처
+  publishedAt: string;
+  sections: NewsBodySection[];
+  terms: Term[];
+  quizzes: Quiz[];
   quizResults: QuizResult[];
-  totalEarnedHoney: number;
-  savedTerms: string[];
+  tags: string[];
 };
+
+// 정답 확인 - API 타입으로 분리
+// export interface SubmitQuizRequest {
+//   selectedIndex: number;
+// }
+
+// export interface SubmitQuizResponse {
+//   quizId: string;
+//   selectedIndex: number;
+//   isCorrect: boolean;
+//   earnedHoney: number;
+//   alreadyAnswered: boolean;
+//   totalHoney: number;
+// }

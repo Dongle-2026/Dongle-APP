@@ -1,4 +1,4 @@
-import type { TermDefinition } from '@/types/learning';
+import type { Term } from '@/types/learning';
 import { BookmarkCheck, Lightbulb, X } from 'lucide-react-native';
 import { useEffect, useRef } from 'react';
 import {
@@ -12,22 +12,15 @@ import {
   View,
 } from 'react-native';
 
-const CATEGORY_COLOR: Record<TermDefinition['category'], { bg: string; text: string }> = {
-  경제: { bg: '#EAF6F9', text: '#0e7fa3' },
-  정책: { bg: '#EDF7EE', text: '#2a7a35' },
-  금융: { bg: '#FFF8E6', text: '#b8720a' },
-  창업: { bg: '#F3EEFF', text: '#6b3fa0' },
-  일반: { bg: '#F0EEEC', text: '#555' },
-};
-
 type Props = {
-  term: TermDefinition | null;
+  term: Term | null;
   isSaved: boolean;
-  onSave: (term: TermDefinition) => void;
+  onSave: (term: Term) => void;
+  onUnsave?: (term: Term) => void;
   onClose: () => void;
 };
 
-export default function TermModal({ term, isSaved, onSave, onClose }: Props) {
+export default function TermModal({ term, isSaved, onSave, onUnsave, onClose }: Props) {
   const slideAnim = useRef(new Animated.Value(300)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
 
@@ -69,8 +62,6 @@ export default function TermModal({ term, isSaved, onSave, onClose }: Props) {
 
   if (!term) return null;
 
-  const color = CATEGORY_COLOR[term.category];
-
   return (
     <Modal transparent visible={!!term} onRequestClose={handleClose} animationType="none">
       {/* Backdrop */}
@@ -107,21 +98,6 @@ export default function TermModal({ term, isSaved, onSave, onClose }: Props) {
                 }}
               >
                 <View style={{ flex: 1, marginRight: 12 }}>
-                  {/* Category badge */}
-                  <View
-                    style={{
-                      alignSelf: 'flex-start',
-                      backgroundColor: color.bg,
-                      paddingHorizontal: 10,
-                      paddingVertical: 3,
-                      borderRadius: 20,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: color.text }}>
-                      {term.category}
-                    </Text>
-                  </View>
                   <Text
                     style={{
                       fontSize: 22,
@@ -191,7 +167,7 @@ export default function TermModal({ term, isSaved, onSave, onClose }: Props) {
 
               {/* Save button */}
               <TouchableOpacity
-                onPress={() => !isSaved && onSave(term)}
+                onPress={() => (isSaved ? onUnsave?.(term) : onSave(term))}
                 activeOpacity={0.8}
                 style={{
                   flexDirection: 'row',
@@ -211,7 +187,11 @@ export default function TermModal({ term, isSaved, onSave, onClose }: Props) {
                     color: isSaved ? '#22272B' : '#fff',
                   }}
                 >
-                  {isSaved ? '저장된 용어예요' : '내 용어장에 저장하기'}
+                  {isSaved
+                    ? onUnsave
+                      ? '저장 해제하기'
+                      : '저장된 용어예요'
+                    : '내 용어장에 저장하기'}
                 </Text>
               </TouchableOpacity>
             </View>

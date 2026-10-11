@@ -49,7 +49,6 @@ export default function HighlightText({ text, terms, onTermPress, style }: Props
               }}
             >
               {seg.text}
-              {' ?⃝'}
             </Text>
           </Text>
         ) : (

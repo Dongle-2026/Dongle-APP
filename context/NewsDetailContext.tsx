@@ -8,7 +8,7 @@ import { View } from 'react-native';
 
 type OpenPayload = {
   newsId: string;
-  thumbnail: string;
+  image: string;
   title: string;
   cardRef: RefObject<View | null>;
 };

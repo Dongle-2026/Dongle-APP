@@ -1,6 +1,6 @@
 import ProfileAvatar from '@/components/mypage/ProfileAvatar';
-import { AVATAR_OPTIONS } from '@/mocks/mypageMock';
 import type { PickedImage, ProfileEditInput, UserProfile } from '@/types/mypage';
+import { AVATAR_OPTIONS } from '@/utils/mock';
 import { ImagePlus, X } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
