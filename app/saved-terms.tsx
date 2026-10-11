@@ -2,7 +2,7 @@ import DetailHeader from '@/components/common/DetailHeader';
 import { GlassCard, GlassSurface, glass } from '@/components/common/glass';
 import TermModal from '@/components/learning/term-modal';
 import { useTermSave } from '@/hooks/use-term-save';
-import type { TermDefinition } from '@/types/learning';
+import type { Term } from '@/types/learning';
 import { mockSavedTerms } from '@/utils/mock'; // TODO: 저장한 용어 API로 교체 (TermDefinition[] 형태: id/term/definition/example)
 import { Stack } from 'expo-router';
 import { BookOpen } from 'lucide-react-native';
@@ -64,12 +64,12 @@ export default function SavedTermsScreen() {
   const scroll = useRef<ScrollView>(null);
   const ys = useRef<Record<string, number>>({});
 
-  const [terms, setTerms] = useState<TermDefinition[]>(mockSavedTerms as TermDefinition[]);
-  const [activeTerm, setActiveTerm] = useState<TermDefinition | null>(null);
+  const [terms, setTerms] = useState<Term[]>(mockSavedTerms as Term[]);
+  const [activeTerm, setActiveTerm] = useState<Term | null>(null);
   const { isSaved, save, unsave, savedIds } = useTermSave(terms.map((t) => t.id));
 
   const groups = useMemo(() => {
-    const m = new Map<string, TermDefinition[]>();
+    const m = new Map<string, Term[]>();
     [...terms]
       .sort((a, b) => a.term.localeCompare(b.term, 'ko'))
       .forEach((t) => {

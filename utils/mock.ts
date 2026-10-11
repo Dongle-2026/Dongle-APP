@@ -269,6 +269,15 @@ export const newsBodyMock: NewsBodyData = {
       honey: 15,
     },
   ],
+  // 💡 사용자가 이전에 푼 문제의 상태 복원용 데이터
+  quizResults: [
+    {
+      quizId: 'q1',
+      selectedIndex: 1,
+      isCorrect: true,
+      earnedHoney: 10,
+    },
+  ],
   tags: ['청년창업', '부산', '지역경제', '로컬', '정부지원'],
 };
 // 검색 목업데이터 ----------------

@@ -1,7 +1,7 @@
 import HighlightedText from '@/components/learning/highlight-text';
 import TermModal from '@/components/learning/term-modal';
 import { useTermSave } from '@/hooks/use-term-save';
-import type { NewsBodyData, QuizResult, TermDefinition } from '@/types/learning';
+import type { NewsBodyData, QuizResult, Term } from '@/types/learning';
 import { BookOpen, ChevronDown, ChevronRight, ChevronUp, Tag } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
@@ -13,7 +13,7 @@ type Props = {
 };
 
 export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
-  const [activeTerm, setActiveTerm] = useState<TermDefinition | null>(null);
+  const [activeTerm, setActiveTerm] = useState<Term | null>(null);
   const [showVocab, setShowVocab] = useState(false);
   const {
     isSaved: isTermSaved,

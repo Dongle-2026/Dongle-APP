@@ -1,4 +1,4 @@
-import type { TermDefinition } from '@/types/learning';
+import type { Term } from '@/types/learning';
 import { BookmarkCheck, Lightbulb, X } from 'lucide-react-native';
 import { useEffect, useRef } from 'react';
 import {
@@ -13,10 +13,10 @@ import {
 } from 'react-native';
 
 type Props = {
-  term: TermDefinition | null;
+  term: Term | null;
   isSaved: boolean;
-  onSave: (term: TermDefinition) => void;
-  onUnsave?: (term: TermDefinition) => void;
+  onSave: (term: Term) => void;
+  onUnsave?: (term: Term) => void;
   onClose: () => void;
 };
 

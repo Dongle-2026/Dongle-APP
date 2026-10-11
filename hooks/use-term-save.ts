@@ -1,5 +1,5 @@
 import { termService } from '@/services/termService';
-import type { TermDefinition } from '@/types/learning';
+import type { Term } from '@/types/learning';
 import { useCallback, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 
@@ -11,7 +11,7 @@ export function useTermSave(initialSavedIds: string[] = []) {
   const [savedIds, setSavedIds] = useState<Set<string>>(() => new Set(initialSavedIds));
   const pending = useRef(new Set<string>()); // 같은 용어의 연타 방지
 
-  const change = useCallback(async (term: TermDefinition, next: boolean) => {
+  const change = useCallback(async (term: Term, next: boolean) => {
     if (pending.current.has(term.id)) return;
     pending.current.add(term.id);
     const apply = (on: boolean) =>
@@ -37,7 +37,7 @@ export function useTermSave(initialSavedIds: string[] = []) {
   return {
     savedIds,
     isSaved: (id: string) => savedIds.has(id),
-    save: (t: TermDefinition) => change(t, true),
-    unsave: (t: TermDefinition) => change(t, false),
+    save: (t: Term) => change(t, true),
+    unsave: (t: Term) => change(t, false),
   };
 }
