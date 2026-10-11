@@ -18,19 +18,13 @@ import QuizMode from '../quiz/QuizMode';
 
 type NewsDetailProps = {
   newsId: string;
-  thumbnail: string;
+  image: string;
   title: string;
   cardRef: RefObject<View | null>;
   onClose: () => void;
 };
 
-export default function NewsDetail({
-  newsId,
-  thumbnail,
-  title,
-  cardRef,
-  onClose,
-}: NewsDetailProps) {
+export default function NewsDetail({ newsId, image, title, cardRef, onClose }: NewsDetailProps) {
   const [news, setNews] = useState<CardNews | null>(null);
   const [isClosing, setIsClosing] = useState(false);
   const bodyData = { ...newsBodyMock, newsId }; // 기존 줄을 위로 이동
@@ -115,7 +109,7 @@ export default function NewsDetail({
   return (
     <NewsCardTransition
       ref={transitionRef}
-      thumbnail={thumbnail}
+      image={image}
       title={title}
       cardRef={cardRef}
       onClose={() => {

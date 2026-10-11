@@ -33,7 +33,7 @@ export const CATEGORIES = [
 
 export const CARD_NEWS = [
   [
-    { type: 'thumbnail', title: '청년미래적금, 6월부터 시작합니다' },
+    { type: 'image', title: '청년미래적금, 6월부터 시작합니다' },
     {
       type: 'content',
       title: '청년미래적금이란?',
@@ -407,28 +407,28 @@ export const mockReadHistory: ReadHistory[] = [
   {
     id: 'r1',
     title: '청년 로컬크리에이터 레벨업 사업, 최대 6000만 원 지원',
-    thumbnail: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&q=80',
+    image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&q=80',
     readAt: '오늘',
     honey: 35,
   },
   {
     id: 'r2',
     title: '한국은행, 기준금리 3.25%로 동결... 하반기 인하 가능성은?',
-    thumbnail: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80',
+    image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80',
     readAt: '어제',
     honey: 40,
   },
   {
     id: 'r3',
     title: '청년도약계좌 가입자 100만 돌파, 실질 수익률은?',
-    thumbnail: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400&q=80',
+    image: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400&q=80',
     readAt: '2일 전',
     honey: 30,
   },
   {
     id: 'r4',
     title: '부동산 PF 리스크, 청년 전세 시장에 미치는 영향',
-    thumbnail: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80',
+    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80',
     readAt: '3일 전',
     honey: 25,
   },

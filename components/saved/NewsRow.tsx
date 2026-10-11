@@ -5,7 +5,7 @@ import { Image, Text, View } from 'react-native';
 
 export type NewsLite = {
   id: string;
-  thumbnail: string;
+  image: string;
   title: string;
   category?: string;
   date?: string;
@@ -26,9 +26,7 @@ export default function NewsRow({
   const meta = [item.category, item.date].filter(Boolean).join(' · ');
   return (
     <GlassCard
-      onPress={() =>
-        open({ newsId: item.id, thumbnail: item.thumbnail, title: item.title, cardRef: ref })
-      }
+      onPress={() => open({ newsId: item.id, image: item.image, title: item.title, cardRef: ref })}
       padding={16}
     >
       <View
@@ -49,7 +47,7 @@ export default function NewsRow({
             backgroundColor: '#F0EEEC',
           }}
         >
-          <Image source={{ uri: item.thumbnail }} style={{ width: '100%', height: '100%' }} />
+          <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} />
         </View>
         <View style={{ flex: 1, gap: 4 }}>
           <Text

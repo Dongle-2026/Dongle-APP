@@ -16,8 +16,8 @@ const generateSlides = (id: number): Slide[] => {
   const imageUrl = MOCK_IMAGES[id % MOCK_IMAGES.length];
   return baseSlides.map((slide, idx) => ({
     id: `slide-${id}-${idx}`,
-    type: slide.type as 'thumbnail' | 'content',
-    image: slide.type === 'thumbnail' ? imageUrl : undefined,
+    type: slide.type as 'image' | 'content',
+    image: slide.type === 'image' ? imageUrl : undefined,
     title: slide.title || '',
     description: slide.description || '',
   }));

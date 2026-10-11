@@ -2,7 +2,7 @@ export type SaveAction = 'save' | 'unsave';
 
 export interface Slide {
   id: string;
-  type: 'thumbnail' | 'content';
+  type: 'image' | 'content';
   image?: string;
   title?: string;
   description?: string;

@@ -18,9 +18,7 @@ function MiniNewsCard({ item }: { item: (typeof mockReadHistory)[number] }) {
     <TouchableOpacity
       activeOpacity={0.85}
       style={{ width: 128, flexShrink: 0 }}
-      onPress={() =>
-        open({ newsId: item.id, thumbnail: item.thumbnail, title: item.title, cardRef: ref })
-      }
+      onPress={() => open({ newsId: item.id, image: item.image, title: item.title, cardRef: ref })}
     >
       <View
         ref={ref}
@@ -35,7 +33,7 @@ function MiniNewsCard({ item }: { item: (typeof mockReadHistory)[number] }) {
           },
         ]}
       >
-        <Image source={{ uri: item.thumbnail }} style={{ width: '100%', height: '100%' }} />
+        <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} />
         <LinearGradient
           colors={['rgba(0,0,0,0.01)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
           style={{ position: 'absolute', inset: 0 }}
