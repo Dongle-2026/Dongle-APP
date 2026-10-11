@@ -1,42 +1,59 @@
 import { GlassChip } from '@/components/common/glass';
 import SectionHeader from '@/components/common/SectionHeader';
 import { useNewsDetail } from '@/context/NewsDetailContext';
-import { mockReadHistory, mockSavedTerms } from '@/utils/mock';
+import { ReadHistory, SavedNews } from '@/types/saved';
+import { mockReadHistory, mockSavedNews, mockSavedTerms } from '@/utils/mock';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useRef } from 'react';
-import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const savedNews = mockReadHistory; // TODO: 저장 기사 데이터로 교체 (기존 코드도 동일 mock 사용)
+type MiniNewsCardProps = {
+  item: SavedNews | ReadHistory;
+};
 
 // 기존 MiniNewsCard 디자인 유지 + 탭하면 기존 뉴스 상세로 연결, 가벼운 glass shadow 추가
-function MiniNewsCard({ item }: { item: (typeof mockReadHistory)[number] }) {
+function MiniNewsCard({ item }: MiniNewsCardProps) {
   const { open } = useNewsDetail();
   const ref = useRef<View>(null);
+
   return (
     <TouchableOpacity
       activeOpacity={0.85}
-      style={{ width: 128, flexShrink: 0 }}
+      style={{
+        width: 128,
+        flexShrink: 0,
+        // 가벼운 glass shadow 효과 추가
+        ...Platform.select({
+          ios: {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+          },
+          android: {
+            elevation: 3,
+          },
+        }),
+      }}
       onPress={() => open({ newsId: item.id, image: item.image, title: item.title, cardRef: ref })}
     >
       <View
         ref={ref}
         collapsable={false}
-        style={[
-          {
-            width: 128,
-            aspectRatio: 0.72,
-            borderRadius: 18,
-            overflow: 'hidden',
-            backgroundColor: '#F0EEEC',
-          },
-        ]}
+        style={{
+          width: 128,
+          aspectRatio: 0.72,
+          borderRadius: 18,
+          overflow: 'hidden',
+          backgroundColor: '#F0EEEC',
+        }}
       >
         <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} />
         <LinearGradient
           colors={['rgba(0,0,0,0.01)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
-          style={{ position: 'absolute', inset: 0 }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           pointerEvents="none"
         />
         <View style={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>
@@ -52,14 +69,13 @@ function MiniNewsCard({ item }: { item: (typeof mockReadHistory)[number] }) {
   );
 }
 
-const Rail = ({ data }: { data: typeof mockReadHistory }) => (
+export const Rail = ({ data }: { data: (SavedNews | ReadHistory)[] }) => (
   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
     {data.map((item) => (
       <MiniNewsCard key={item.id} item={item} />
     ))}
   </ScrollView>
 );
-
 export default function SavedScreen() {
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#F9F9F9' }}>
@@ -94,10 +110,10 @@ export default function SavedScreen() {
           <View>
             <SectionHeader
               title="저장한 기사"
-              subtitle={`${savedNews.length}개`}
+              subtitle={`${mockSavedNews.length}개`}
               onMore={() => router.push('/saved-news')}
             />
-            <Rail data={savedNews} />
+            <Rail data={mockSavedNews} />
           </View>
           <View>
             <SectionHeader title="최근 읽은 기사" onMore={() => router.push('/recent-news')} />

@@ -31,21 +31,6 @@ export type ActivityDay = {
   honey: number;
 };
 
-export type SavedTerm = {
-  id: string;
-  term: string;
-  definition: string;
-  example?: string;
-};
-
-export type ReadHistory = {
-  id: string;
-  title: string;
-  image: string;
-  readAt: string;
-  honey: number; // 획득한 꿀
-};
-
 export type NotificationSetting = {
   dailyDigest: boolean; // 오늘의 뉴스 알림
   quizReminder: boolean; // 퀴즈 리마인더

@@ -300,12 +300,12 @@ export const TRENDING_KEYWORDS = [
 import type {
   ActivityDay,
   NotificationSetting,
-  ReadHistory,
-  SavedTerm,
   UserActivity,
   UserProfile,
   UserStats,
 } from '@/types/mypage';
+
+import type { ReadHistory, SavedNews, SavedTerm } from '@/types/saved';
 
 export const mockProfile: UserProfile = {
   id: 'user-001',
@@ -403,6 +403,18 @@ export const mockSavedTerms: SavedTerm[] = [
     id: 't6',
     term: '판로 확대',
     definition: '제품·서비스를 판매할 수 있는 새로운 시장·채널을 넓히는 것',
+  },
+];
+
+export const mockSavedNews: SavedNews[] = [
+  {
+    id: 'r1',
+    title: '청년 로컬크리에이터 레벨업 사업, 최대 6000만 원 지원',
+    image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&q=80',
+    category: '청년',
+    createdAt: '2026.1.2',
+    isSaved: true,
+    savedAt: '2026.1.2',
   },
 ];
 

@@ -58,16 +58,16 @@ export type NewsBodyData = {
   tags: string[];
 };
 
-// 정답 확인
-export interface SubmitQuizRequest {
-  selectedIndex: number;
-}
+// 정답 확인 - API 타입으로 분리
+// export interface SubmitQuizRequest {
+//   selectedIndex: number;
+// }
 
-export interface SubmitQuizResponse {
-  quizId: string;
-  selectedIndex: number;
-  isCorrect: boolean;
-  earnedHoney: number;
-  alreadyAnswered: boolean;
-  totalHoney: number;
-}
+// export interface SubmitQuizResponse {
+//   quizId: string;
+//   selectedIndex: number;
+//   isCorrect: boolean;
+//   earnedHoney: number;
+//   alreadyAnswered: boolean;
+//   totalHoney: number;
+// }

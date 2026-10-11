@@ -1,29 +1,28 @@
 import { glass, GlassCard } from '@/components/common/glass';
 import { useNewsDetail } from '@/context/NewsDetailContext';
+import { ReadHistory, SavedNews } from '@/types/saved';
 import { useRef } from 'react';
 import { Image, Text, View } from 'react-native';
 
-export type NewsLite = {
-  id: string;
-  image: string;
-  title: string;
-  category?: string;
-  date?: string;
-  readAt?: string | number;
+type NewsRowProps = {
+  item: SavedNews | ReadHistory;
+  variant: 'saved' | 'recent';
 };
 
-// 리스트용 행. 홈 카드와 같은 useNewsDetail().open()으로 기존 뉴스 상세(전환 애니메이션 포함)에 연결.
-// 행마다 블러를 쓰면 긴 목록에서 무거우므로 일반 콘텐츠로 두고, 블러는 헤더·카드에만 사용.
-export default function NewsRow({
-  item,
-  variant,
-}: {
-  item: NewsLite;
-  variant: 'saved' | 'recent';
-}) {
+// 타입 가드: ReadHistory 인지 확인
+function isReadHistory(item: SavedNews | ReadHistory): item is ReadHistory {
+  return 'readAt' in item;
+}
+
+export default function NewsRow({ item, variant }: NewsRowProps) {
   const { open } = useNewsDetail();
   const ref = useRef<View>(null);
-  const meta = [item.category, item.date].filter(Boolean).join(' · ');
+
+  // variant / 데이터 타입에 따른 메타데이터 텍스트 구성
+  const meta = isReadHistory(item)
+    ? [item.readAt, item.honey ? `+${item.honey} 꿀` : null].filter(Boolean).join(' · ')
+    : [item.category, item.createdAt || item.savedAt].filter(Boolean).join(' · ');
+
   return (
     <GlassCard
       onPress={() => open({ newsId: item.id, image: item.image, title: item.title, cardRef: ref })}
@@ -57,11 +56,6 @@ export default function NewsRow({
             {item.title}
           </Text>
           {meta ? <Text style={{ fontSize: 12, color: glass.inkMuted }}>{meta}</Text> : null}
-          {/* {variant === 'saved' ? (
-          <GlassIconButton icon={Bookmark} label="저장됨" variant="solid" />
-        ) : (
-          <GlassIconButton icon={Bookmark} label="저장" />
-        )} */}
         </View>
       </View>
     </GlassCard>
