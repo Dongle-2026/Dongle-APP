@@ -8,7 +8,7 @@ export type SavedTerm = {
 export type SavedNews = {
   id: string;
   title: string;
-  image: string;
+  image?: string; // [변경] 응답에 썸네일 없음
   category: string;
   createdAt: string;
   isSaved: boolean;
@@ -18,7 +18,7 @@ export type SavedNews = {
 export type ReadHistory = {
   id: string;
   title: string;
-  image: string;
-  readAt: string;
+  image?: string; // [변경] 응답에 썸네일 없음
+  readAt: string; // [변경] ISO 시각 (표시는 formatRelative)
   honey: number; // 획득한 꿀
 };

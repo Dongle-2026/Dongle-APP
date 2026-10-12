@@ -6,7 +6,7 @@ export type UserProfile = {
   bio: string;
   avatarId: string;
   profileImageUrl?: string | null;
-  oauthProvider: 'kakao' | 'naver';
+  oauthProvider?: 'kakao' | 'google'; // [변경] 백엔드는 kakao|google, 이메일 가입은 필드 없음
   joinedAt: string;
 };
 
@@ -17,6 +17,8 @@ export type UserStats = {
   quizCount: number;
   correctCount: number;
   totalHoney: number;
+  todayDone: boolean; // [추가] 오늘 학습 완료 여부 (홈 헤더 배너)
+  learnedTermCount: number; // [추가] 선택
 };
 
 export type UserActivity = {
