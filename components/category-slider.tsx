@@ -1,9 +1,9 @@
-import type { Category } from '@/types';
+import type { CategoryDto } from '@/types/api/search';
 import { useEffect, useRef } from 'react';
 import { Animated, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 interface CategorySliderProps {
-  category: Category[];
+  category: CategoryDto[];
   selectedCategory: string;
   onPress: (categoryId: string) => void;
 }
@@ -14,7 +14,7 @@ function CategoryChip({
   isSelected,
   onPress,
 }: {
-  item: Category;
+  item: CategoryDto;
   isSelected: boolean;
   onPress: () => void;
 }) {

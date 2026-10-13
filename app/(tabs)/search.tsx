@@ -1,9 +1,9 @@
-// ⚠ 이 파일에서 기존 RecentSearchSection / TrendingSection / SuggestionList / KeywordCard 는 그대로 두고
-//    SearchScreen(default export)만 아래 코드로 교체하세요. (3곳 Glass 패치는 답변 본문 참고)
 import CategorySlider from '@/components/category-slider';
 import { GlassCard } from '@/components/common/glass';
 import SearchMorphBar from '@/components/search/SearchMorphBar';
-import { CATEGORIES, KEYWORD_NEWS, RECENT_SEARCHES, TRENDING_KEYWORDS } from '@/utils/mock';
+import { useCategories, useKeywords, useSuggestions, useTrending } from '@/hooks/queries/queries';
+import { useRecentSearches } from '@/hooks/use-recent-search';
+import { KeywordDto } from '@/types/api/search';
 import { router } from 'expo-router';
 import { ArrowRight, Clock, Minus, Search, TrendingDown, TrendingUp, X } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -107,11 +107,12 @@ const TREND_ICON = {
 } as const;
 
 function TrendingSection({ onPress }: { onPress: (q: string) => void }) {
+  const { data: trendingKeywords } = useTrending();
   return (
     <View style={{ flexDirection: 'row', gap: 8 }}>
-      {[TRENDING_KEYWORDS.slice(0, 4), TRENDING_KEYWORDS.slice(4, 8)].map((col, ci) => (
+      {[trendingKeywords?.slice(0, 4), trendingKeywords?.slice(4, 8)].map((col, ci) => (
         <View key={ci} style={{ flex: 1 }}>
-          {col.map((item, i) => (
+          {col?.map((item, i) => (
             <TouchableOpacity
               key={item.rank}
               onPress={() => onPress(item.keyword)}
@@ -154,9 +155,11 @@ function TrendingSection({ onPress }: { onPress: (q: string) => void }) {
 // ─── 자동완성 ─────────────────────────────────────────────────────────────────
 
 function SuggestionList({ query, onSelect }: { query: string; onSelect: (q: string) => void }) {
-  const matched = TRENDING_KEYWORDS.filter((t) =>
-    t.keyword.toLowerCase().includes(query.toLowerCase())
-  ).map((m) => m.keyword);
+  const { data: suggestionKeywords } = useSuggestions(query);
+  const matched =
+    suggestionKeywords
+      ?.filter((t) => t.keyword.toLowerCase().includes(query.toLowerCase()))
+      .map((m) => m.keyword) ?? [];
 
   const items = query.trim()
     ? [query.trim(), ...matched.filter((k) => k !== query.trim())].slice(0, 6)
@@ -201,13 +204,7 @@ function SuggestionList({ query, onSelect }: { query: string; onSelect: (q: stri
 
 // ─── 키워드 카드 ──────────────────────────────────────────────────────────────
 
-function KeywordCard({
-  item,
-  onPress,
-}: {
-  item: (typeof KEYWORD_NEWS)[number];
-  onPress: () => void;
-}) {
+function KeywordCard({ item, onPress }: { item: KeywordDto; onPress: () => void }) {
   const { width: screenWidth } = Dimensions.get('window');
   const cardWidth = (screenWidth - 32) / 2;
   return (
@@ -252,7 +249,10 @@ export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [recentSearches, setRecentSearches] = useState<string[]>(RECENT_SEARCHES);
+  const { recentSearches, addRecent, removeRecent, clearAllRecent } = useRecentSearches();
+
+  const { data: categories } = useCategories();
+  const { data: keywords } = useKeywords();
 
   // 0 = 기본 화면(버튼), 1 = 검색 중(검색창). 검색바·그리드·오버레이가 이 값 하나로 같이 움직임
   const progress = useRef(new Animated.Value(0)).current;
@@ -287,26 +287,21 @@ export default function SearchScreen() {
     (kw: string) => {
       const q = kw.trim();
       if (!q) return;
-      setRecentSearches((prev) => [q, ...prev.filter((s) => s !== q)].slice(0, 5));
+      addRecent(q);
+
       Keyboard.dismiss();
       progress.setValue(0);
       setIsSearching(false);
       setQuery('');
       router.push({ pathname: '/news-list', params: { keyword: q } });
     },
-    [progress]
+    [progress, addRecent]
   );
-
-  const removeRecent = useCallback(
-    (q: string) => setRecentSearches((p) => p.filter((s) => s !== q)),
-    []
-  );
-  const clearAllRecent = useCallback(() => setRecentSearches([]), []);
 
   const filteredKeywords =
     selectedCategory === 'all'
-      ? KEYWORD_NEWS
-      : KEYWORD_NEWS.filter((n) => (n as any).category === selectedCategory);
+      ? keywords
+      : keywords?.filter((n) => (n as any).category === selectedCategory);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F9F9F9' }} edges={['top']}>
@@ -328,13 +323,15 @@ export default function SearchScreen() {
           pointerEvents={isSearching ? 'none' : 'auto'}
           style={{ flex: 1, opacity: gridOpacity }}
         >
-          <View style={{ height: 80 }}>
-            <CategorySlider
-              category={CATEGORIES}
-              selectedCategory={selectedCategory}
-              onPress={(id) => setSelectedCategory(id)}
-            />
-          </View>
+          {categories && (
+            <View style={{ height: 80 }}>
+              <CategorySlider
+                category={categories}
+                selectedCategory={selectedCategory}
+                onPress={(id) => setSelectedCategory(id)}
+              />
+            </View>
+          )}
           <FlatList
             data={filteredKeywords}
             numColumns={2}
@@ -347,9 +344,7 @@ export default function SearchScreen() {
               <KeywordCard
                 item={item}
                 onPress={() => {
-                  setRecentSearches((prev) =>
-                    [item.keyword, ...prev.filter((s) => s !== item.keyword)].slice(0, 5)
-                  );
+                  addRecent(item.keyword);
                   router.push({ pathname: '/news-list', params: { keyword: item.keyword } });
                 }}
               />
