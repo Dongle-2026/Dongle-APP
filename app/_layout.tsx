@@ -1,9 +1,10 @@
 import NewsDetail from '@/components/news/news-detail';
 import { NewsDetailProvider, useNewsDetail } from '@/context/NewsDetailContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import '../global.css';
 
@@ -73,17 +74,30 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 1000 * 60 * 5,
+            retry: 1,
+          },
+        },
+      })
+  );
 
   return (
-    <NewsDetailProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="news-list" options={{ headerShown: false }} />
-          <Stack.Screen name="glass-demo" options={{ headerShown: false }} />
-        </Stack>
-      </ThemeProvider>
-      <NewsDetailPortal />
-    </NewsDetailProvider>
+    <QueryClientProvider client={queryClient}>
+      <NewsDetailProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="news-list" options={{ headerShown: false }} />
+            <Stack.Screen name="glass-demo" options={{ headerShown: false }} />
+          </Stack>
+        </ThemeProvider>
+        <NewsDetailPortal />
+      </NewsDetailProvider>
+    </QueryClientProvider>
   );
 }
