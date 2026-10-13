@@ -3,10 +3,11 @@ import type { ISODate, ISODateTime, PageParams } from './common';
 export interface NewsListItemDto {
   id: number;
   title: string;
-  sourceName: string;
+  sourceName?: string;
   category: string;
-  summary: string;
-  publishedAt: ISODateTime;
+  summary?: string;
+  publishedAt?: ISODateTime;
+  //image 추가
 }
 export interface NewsListParams extends PageParams {
   category?: string;

@@ -1,12 +1,22 @@
 import { GlassIconButton } from '@/components/common/glass';
 import { useNewsDetail } from '@/context/NewsDetailContext';
-import { KEYWORD_NEWS } from '@/utils/mock';
+import { useNewsSearch } from '@/hooks/queries/queries';
+import { CardNews } from '@/types';
+import { MOCK_IMAGES } from '@/utils/mock';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Search } from 'lucide-react-native';
 import type { RefObject } from 'react';
 import { useRef } from 'react';
-import { Dimensions, FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -16,8 +26,8 @@ function NewsGridCard({
   item,
   onPress,
 }: {
-  item: (typeof KEYWORD_NEWS)[number];
-  onPress: (item: (typeof KEYWORD_NEWS)[number], ref: RefObject<View | null>) => void;
+  item: CardNews;
+  onPress: (item: CardNews, ref: RefObject<View | null>) => void;
 }) {
   const cardRef = useRef<View>(null);
   return (
@@ -25,25 +35,51 @@ function NewsGridCard({
       ref={cardRef}
       onPress={() => onPress(item, cardRef)}
       activeOpacity={0.9}
-      style={{ width: cardWidth, height: 220, borderRadius: 16, overflow: 'hidden' }}
+      style={{
+        width: cardWidth,
+        height: 220,
+        borderRadius: 16,
+        overflow: 'hidden',
+        backgroundColor: '#D9D9D9',
+      }}
     >
-      <Image
-        source={{ uri: item.image }}
+      {/* <Image
+        source={{ uri: MOCK_IMAGE }}
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         resizeMode="cover"
-      />
+      /> */}
       <LinearGradient
         colors={['rgba(0,0,0,0.01)', 'rgba(0,0,0,0.05)', 'rgba(0,0,0,0.82)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
       >
-        <View style={{ flex: 1, justifyContent: 'flex-end', padding: 12, paddingBottom: 14 }}>
+        <View
+          style={{
+            position: 'absolute',
+            left: 12,
+            top: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 4,
+            padding: 6,
+            backgroundColor: '#fff',
+            borderRadius: 999,
+          }}
+        >
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={{ width: 10, height: 10 }}
+            resizeMode="cover"
+          />
+          <Text style={{ fontSize: 10, fontWeight: '600' }}>{item.category}</Text>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'flex-end', padding: 12, paddingBottom: 24 }}>
           <Text
-            numberOfLines={2}
-            style={{ fontSize: 14, fontWeight: '800', color: '#fff', lineHeight: 20 }}
+            numberOfLines={3}
+            style={{ fontSize: 17, fontWeight: '600', color: '#fff', lineHeight: 23 }}
           >
-            {item.keyword}
+            {item.title}
           </Text>
         </View>
       </LinearGradient>
@@ -71,22 +107,35 @@ export default function NewsListScreen() {
   const { keyword } = useLocalSearchParams<{ keyword?: string }>();
   const displayKeyword = keyword ?? '검색 결과';
 
-  // 목업: keyword 필터링 (API 연동 시 교체)
-  const filteredNews = keyword
-    ? KEYWORD_NEWS.filter((n) => n.keyword.toLowerCase().includes(keyword.toLowerCase()))
-        .concat(
-          // 목업 데이터가 적으므로 결과 없을 때도 전체 노출
-          KEYWORD_NEWS
-        )
-        .filter((v, i, arr) => arr.findIndex((t) => t.id === v.id) === i)
-    : KEYWORD_NEWS;
+  const {
+    data: newsList,
+    isLoading,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useNewsSearch(keyword ?? '');
 
-  const handleCardPress = (
-    item: (typeof KEYWORD_NEWS)[number],
-    cardRef: RefObject<View | null>
-  ) => {
-    open({ newsId: item.id, image: item.image, title: item.keyword, cardRef });
+  const newsData = newsList ?? [];
+
+  const handleCardPress = (item: CardNews, cardRef: RefObject<View | null>) => {
+    open({ newsId: String(item.id), image: MOCK_IMAGES[0], title: item.title, cardRef });
   };
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+  if (isError) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>문제가 발생했습니다.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9F9F9' }}>
@@ -118,17 +167,23 @@ export default function NewsListScreen() {
           </View>
         </View>
 
-        {filteredNews.length === 0 ? (
+        {newsData.length === 0 ? (
           <EmptyResult keyword={displayKeyword} />
         ) : (
           <FlatList
-            data={filteredNews}
+            data={newsData}
             numColumns={2}
             keyExtractor={(item) => item.id.toString()}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
             columnWrapperStyle={{ gap: 8, marginBottom: 8 }}
             renderItem={({ item }) => <NewsGridCard item={item} onPress={handleCardPress} />}
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) {
+                void fetchNextPage();
+              }
+            }}
+            onEndReachedThreshold={0.5}
           />
         )}
       </SafeAreaView>

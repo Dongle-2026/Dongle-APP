@@ -15,11 +15,11 @@ const id = (n: number | string) => String(n);
 export const toCardNews = (d: NewsListItemDto): CardNews => ({
   id: id(d.id),
   title: d.title,
-  description: d.summary,
+  description: d.summary ?? '',
   content: '',
   category: d.category,
-  createdAt: d.publishedAt,
-  updatedAt: d.publishedAt,
+  createdAt: d.publishedAt ?? '',
+  updatedAt: d.publishedAt ?? '',
   isSaved: false,
 });
 
@@ -129,11 +129,16 @@ export const toCategories = (list: CategoryDto[]): Category[] => [
   ...list.map((c) => ({ id: c.id, name: c.name, isNew: c.isNew })),
 ];
 export const toKeywords = (list: KeywordDto[]): Keyword[] =>
-  list.map((k) => ({ id: id(k.id), keyword: k.keyword, image: k.image, category: k.category }));
+  list.map((k) => ({
+    id: id(k.id),
+    keyword: k.keyword,
+    image: k.image,
+    category: k.category ?? '',
+  }));
 // change 값 집합은 문서에 없음 → 대소문자 무시, 알 수 없으면 'same'
 export const toTrending = (list: TrendingDto[]): TrendingKeyword[] =>
   list.map((t) => {
-    const c = t.change.toLowerCase();
+    const c = t.change?.toLowerCase();
     return {
       rank: t.rank,
       keyword: t.keyword,

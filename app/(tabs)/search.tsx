@@ -1,7 +1,12 @@
 import CategorySlider from '@/components/category-slider';
 import { GlassCard } from '@/components/common/glass';
 import SearchMorphBar from '@/components/search/SearchMorphBar';
-import { useCategories, useKeywords, useSuggestions, useTrending } from '@/hooks/queries/queries';
+import {
+  useCategories,
+  useKeywords,
+  useSuggestions,
+  useTrending
+} from '@/hooks/queries/queries';
 import { useRecentSearches } from '@/hooks/use-recent-search';
 import { KeywordDto } from '@/types/api/search';
 import { router } from 'expo-router';
