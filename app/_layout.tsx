@@ -1,10 +1,12 @@
+import { authStore } from '@/auth/authStore';
 import NewsDetail from '@/components/news/news-detail';
 import { NewsDetailProvider, useNewsDetail } from '@/context/NewsDetailContext';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 import '../global.css';
 
@@ -53,6 +55,12 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const { status } = authStore.useAuth();
+
+  // 앱 시작 시 저장된 토큰 확인 → status: 'authed' | 'anon'
+  useEffect(() => {
+    void authStore.bootstrap();
+  }, []);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -60,12 +68,12 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && status !== 'loading') {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, status]);
 
-  if (!loaded) {
+  if (!loaded || status === 'loading') {
     return null;
   }
 
@@ -74,29 +82,41 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 1000 * 60 * 5,
-            retry: 1,
-          },
-        },
-      })
-  );
+  const { status } = authStore.useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  // 인증 상태에 따른 화면 분기
+  useEffect(() => {
+    // 현재 경로가 로그인 화면인지 여부를 유연하게 체크
+    const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'login';
+
+    if (status === 'anon' && !inAuthGroup) {
+      // 비로그인 상태인데 인증 화면이 아니면 로그인으로 이동
+      // 만약 login.tsx가 루트에 있다면 '/login', (auth) 그룹에 있다면 '/(auth)/login'으로 맞춰주세요.
+      router.replace('/login');
+    } else if (status === 'authed' && inAuthGroup) {
+      // 로그인 상태인데 로그인 화면에 머물러 있으면 메인 화면으로 이동
+      router.replace('/(tabs)');
+    }
+  }, [status, segments, router]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <NewsDetailProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack>
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="login"
+              options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }}
+            />
             <Stack.Screen name="news-list" options={{ headerShown: false }} />
             <Stack.Screen name="glass-demo" options={{ headerShown: false }} />
           </Stack>
         </ThemeProvider>
-        <NewsDetailPortal />
+        {status === 'authed' && <NewsDetailPortal />}
       </NewsDetailProvider>
     </QueryClientProvider>
   );
