@@ -1,4 +1,4 @@
-import { mockProfile, mockUserStats } from '@/utils/mock';
+import { useMe, useMyStats } from '@/hooks/queries/queries';
 import { router } from 'expo-router';
 import { Image, Text, View } from 'react-native';
 import { GlassCard, GlassChip, glass } from '../common/glass';
@@ -11,7 +11,11 @@ type Props = {
 };
 
 export default function HomeHeader({ topInset = 52 }: Props) {
-  const { streak, todayHoney } = mockUserStats;
+  const { data: stats } = useMyStats();
+  const { data: me } = useMe();
+  const streak = stats?.streak ?? 0;
+  const todayHoney = stats?.todayHoney ?? 0;
+  const nickname = me?.nickname ?? '';
 
   return (
     <>
@@ -31,7 +35,8 @@ export default function HomeHeader({ topInset = 52 }: Props) {
       </View>
 
       {/* ── 오늘 학습 유도 배너 (미완료 시) ── */}
-      {todayHoney && (
+      {/* 기존 `todayHoney && (…)`는 0일 때 '0'이 그대로 렌더되는 버그 → 통계가 로드된 뒤에만 배너 표시 */}
+      {stats && (
         <View className="py-3 px-6">
           <GlassCard onPress={() => {}}>
             {todayHoney == 0 ? (
@@ -48,7 +53,7 @@ export default function HomeHeader({ topInset = 52 }: Props) {
                     오늘의 꿀단지가 비었어요!
                   </Text>
                   <Text style={{ fontSize: 14, lineHeight: 21, color: glass.inkMuted }}>
-                    {mockProfile.nickname}님 연속학습을 이어가세요!
+                    {nickname}님 연속학습을 이어가세요!
                   </Text>
                 </View>
               </View>
@@ -66,7 +71,7 @@ export default function HomeHeader({ topInset = 52 }: Props) {
                     오늘 {todayHoney}P 꿀을 모았어요
                   </Text>
                   <Text style={{ fontSize: 14, lineHeight: 21, color: glass.inkMuted }}>
-                    {mockProfile.nickname}님 잘하고 있어요!
+                    {nickname}님 잘하고 있어요!
                   </Text>
                 </View>
               </View>
