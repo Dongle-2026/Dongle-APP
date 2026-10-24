@@ -20,15 +20,30 @@ export const meService = {
   // 문서: nickname/bio/avatarId/removeImage 는 쿼리, image 는 multipart. bio="" 는 소개 삭제
   updateProfile: (params: UpdateProfileParams, image?: PickedImage | null) => {
     let form: FormData | undefined;
-    if (image) {
+
+    // 💡 오직 이미지 파일만 FormData에 담습니다.
+    if (image && image.uri) {
       form = new FormData();
+      const uriParts = image.uri.split('/');
+      const generatedFileName = uriParts[uriParts.length - 1] || 'profile.jpg';
+
       form.append('image', {
         uri: image.uri,
-        name: image.fileName ?? 'profile.jpg',
-        type: image.mimeType ?? 'image/jpeg',
-      } as unknown as Blob);
+        name: image.fileName || generatedFileName,
+        type: image.mimeType || 'image/jpeg',
+      } as any);
     }
-    return http.patch<MeDto>('/api/me/profile', { query: { ...params }, form });
+
+    // 💡 텍스트와 boolean 값은 Swagger 스펙대로 query로 보냅니다.
+    return http.patch<MeDto>('/api/me/profile', {
+      query: {
+        nickname: params.nickname,
+        bio: params.bio,
+        avatarId: params.avatarId,
+        removeImage: params.removeImage,
+      },
+      form, // 이미지만 멀티파트로 전달
+    });
   },
   withdraw: () => http.delete<void>('/api/me'),
   savedTerms: (p: PageParams = {}) =>

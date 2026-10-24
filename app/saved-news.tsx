@@ -1,13 +1,20 @@
 import NewsListScreen from '@/components/saved/NewsListScreen';
-import { mockSavedNews } from '@/utils/mock'; // TODO: 저장 기사 스토어/API로 교체 (현재 saved.tsx도 같은 mock 사용 중)
+import { useSavedNews } from '@/hooks/queries/queries';
 
 export default function SavedNewsScreen() {
+  const q = useSavedNews(); // GET /api/me/saved-news
   return (
     <NewsListScreen
       title="저장한 기사"
       variant="saved"
-      items={mockSavedNews}
+      items={q.data ?? []}
       emptyText="저장한 기사가 없어요"
+      loading={q.isLoading}
+      error={q.error?.message}
+      onRetry={() => void q.refetch()}
+      onEndReached={() => {
+        if (q.hasNextPage && !q.isFetchingNextPage) void q.fetchNextPage();
+      }}
     />
   );
 }

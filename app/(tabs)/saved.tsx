@@ -1,8 +1,8 @@
 import { GlassChip } from '@/components/common/glass';
 import SectionHeader from '@/components/common/SectionHeader';
 import { useNewsDetail } from '@/context/NewsDetailContext';
+import { useReadHistory, useSavedNews, useSavedTermsAll } from '@/hooks/queries/queries';
 import { ReadHistory, SavedNews } from '@/types/saved';
-import { mockReadHistory, mockSavedNews, mockSavedTerms } from '@/utils/mock';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useRef } from 'react';
@@ -37,7 +37,9 @@ function MiniNewsCard({ item }: MiniNewsCardProps) {
           },
         }),
       }}
-      onPress={() => open({ newsId: item.id, image: item.image, title: item.title, cardRef: ref })}
+      onPress={() =>
+        open({ newsId: item.id, image: item.image ?? '', title: item.title, cardRef: ref })
+      }
     >
       <View
         ref={ref}
@@ -50,7 +52,10 @@ function MiniNewsCard({ item }: MiniNewsCardProps) {
           backgroundColor: '#F0EEEC',
         }}
       >
-        <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} />
+        {/* 저장/읽음 응답에 썸네일이 없음 → 없으면 배경색 박스만 */}
+        {item.image ? (
+          <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} />
+        ) : null}
         <LinearGradient
           colors={['rgba(0,0,0,0.01)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
@@ -71,12 +76,13 @@ function MiniNewsCard({ item }: MiniNewsCardProps) {
 
 export const Rail = ({ data }: { data: (SavedNews | ReadHistory)[] }) => (
   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-    {data.map((item) => (
-      <MiniNewsCard key={item.id} item={item} />
-    ))}
+    {data.length === 0 ? null : data.map((item) => <MiniNewsCard key={item.id} item={item} />)}
   </ScrollView>
 );
 export default function SavedScreen() {
+  const terms = useSavedTermsAll().data ?? [];
+  const savedNews = useSavedNews().data ?? [];
+  const recent = useReadHistory().data ?? [];
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#F9F9F9' }}>
       <ScrollView
@@ -90,18 +96,18 @@ export default function SavedScreen() {
           <View>
             <SectionHeader
               title="저장한 용어"
-              subtitle={`${mockSavedTerms.length}개 저장됨`}
+              subtitle={`${terms.length}개 저장됨`}
               onMore={() => router.push('/saved-terms')}
             />
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {mockSavedTerms.slice(0, 8).map((t) => (
+              {terms.slice(0, 8).map((t) => (
                 <GlassChip key={t.id} label={t.term} onPress={() => router.push('/saved-terms')} />
               ))}
-              {mockSavedTerms.length > 8 && (
+              {terms.length > 8 && (
                 <GlassChip
                   selected
-                  label={`+${mockSavedTerms.length - 8}개 더`}
+                  label={`+${terms.length - 8}개 더`}
                   onPress={() => router.push('/saved-terms')}
                 />
               )}
@@ -110,14 +116,14 @@ export default function SavedScreen() {
           <View>
             <SectionHeader
               title="저장한 기사"
-              subtitle={`${mockSavedNews.length}개`}
+              subtitle={`${savedNews.length}개`}
               onMore={() => router.push('/saved-news')}
             />
-            <Rail data={mockSavedNews} />
+            <Rail data={savedNews} />
           </View>
           <View>
             <SectionHeader title="최근 읽은 기사" onMore={() => router.push('/recent-news')} />
-            <Rail data={mockReadHistory} />
+            <Rail data={recent} />
           </View>
         </View>
       </ScrollView>
