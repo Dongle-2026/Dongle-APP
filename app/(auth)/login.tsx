@@ -7,6 +7,7 @@ import { Lock, Mail, User } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Path, Svg } from 'react-native-svg';
 
 type Mode = 'start' | 'login' | 'signup';
 
@@ -69,17 +70,21 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24, gap: 12 }}
       >
-        <View style={{ alignItems: 'center', marginBottom: 24 }}>
-          <Image
-            source={require('@/assets/avatars/happy.png')}
-            style={{ width: 96, height: 110 }}
-            resizeMode="contain"
-          />
-          <Text className="text-[32px]" style={{ marginTop: 12 }}>
-            돈글돈글
-          </Text>
+        <View style={{ alignItems: 'center', height: 120 }}>
+          <View className="flex-row items-center gap-2 mb-2">
+            <Image
+              source={require('@/assets/images/logo.png')}
+              style={{ width: 40, height: 40 }}
+              resizeMode="contain"
+            />
+            <Image
+              source={require('@/assets/images/logo1.png')}
+              style={{ width: 100, height: 30 }}
+              resizeMode="contain"
+            />
+          </View>
           <Text style={{ fontSize: 14, color: glass.inkMuted, marginTop: 4 }}>
-            뉴스로 배우는 쉬운 금융
+            돈 이야기, 어렵지 않게
           </Text>
         </View>
 
@@ -90,6 +95,7 @@ export default function LoginScreen() {
               onPress={() => void social.login('kakao')}
               disabled={busy || !socialConfigured.kakao}
               accessibilityRole="button"
+              accessibilityLabel="카카오로 시작하기"
               style={{
                 height: 56,
                 borderRadius: 28,
@@ -97,20 +103,64 @@ export default function LoginScreen() {
                 justifyContent: 'center',
                 backgroundColor: '#FEE500',
                 opacity: busy || !socialConfigured.kakao ? 0.45 : 1,
+                position: 'relative',
               }}
             >
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#191919' }}>
-                {social.loading === 'kakao' ? '로그인 중…' : '카카오로 시작하기'}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Svg width={22} height={22} viewBox="0 0 24 24">
+                  <Path
+                    d="M12 3C6.477 3 2 6.49 2 10.8c0 2.78 1.84 5.22 4.62 6.58l-1.18 4.3a.3.3 0 0 0 .46.32l5.1-3.38c.33.03.66.05 1 .05 5.523 0 10-3.49 10-7.87C22 6.49 17.523 3 12 3Z"
+                    fill="#191919"
+                  />
+                </Svg>
+
+                <Text style={{ fontSize: 16, fontWeight: '700', color: '#191919' }}>
+                  {social.loading === 'kakao' ? '로그인 중…' : '카카오로 시작하기'}
+                </Text>
+              </View>
             </TouchableOpacity>
-            <GlassButton
-              label={social.loading === 'google' ? '로그인 중…' : 'Google로 시작하기'}
-              variant="glass"
-              size="lg"
-              fullWidth
-              disabled={busy || !socialConfigured.google}
+            <TouchableOpacity
               onPress={() => void social.login('google')}
-            />
+              disabled={busy || !socialConfigured.google}
+              accessibilityRole="button"
+              accessibilityLabel="Google로 시작하기"
+              style={{
+                height: 56,
+                borderRadius: 28,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#FFFFFF',
+                borderWidth: 1,
+                borderColor: '#DADCE0',
+                opacity: busy || !socialConfigured.google ? 0.45 : 1,
+                position: 'relative',
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Svg width={20} height={20} viewBox="0 0 533.5 544.3">
+                  <Path
+                    fill="#4285F4"
+                    d="M533.5 278.4c0-18.5-1.5-37.1-4.7-55.3H272.1v104.8h147.1c-6.4 33.7-25.7 62.3-54.7 81.4v67.8h88.5c51.8-47.8 84.5-118.2 84.5-203.7z"
+                  />
+                  <Path
+                    fill="#34A853"
+                    d="M272.1 544.3c73.4 0 135.3-24.1 180.4-65.7l-88.5-67.8c-24.4 16.6-55.8 26.4-91.9 26.4-70.6 0-130.4-47.7-151.7-111.8H27.5v70.2c45.9 91.1 139.8 158.7 244.6 158.7z"
+                  />
+                  <Path
+                    fill="#FBBC05"
+                    d="M120.4 325.4c-5.4-16.1-8.5-33.3-8.5-51.4s3.1-35.3 8.5-51.4v-70.2H27.5C10 191.5 0 232.8 0 274s10 82.5 27.5 121.6l92.9-70.2z"
+                  />
+                  <Path
+                    fill="#EA4335"
+                    d="M272.1 107.7c39.9 0 75.8 13.7 104.1 40.5l78.1-78.1C407.3 28.5 345.5 0 272.1 0 167.3 0 73.4 67.6 27.5 158.7l92.9 70.2c21.3-64.1 81.1-111.2 151.7-111.2z"
+                  />
+                </Svg>
+
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#3C4043' }}>
+                  {social.loading === 'google' ? '로그인 중…' : 'Google로 시작하기'}
+                </Text>
+              </View>
+            </TouchableOpacity>
             <GlassButton
               label="이메일로 계속하기"
               variant="ghost"
