@@ -1,6 +1,6 @@
 import HighlightedText from '@/components/learning/highlight-text';
 import TermModal from '@/components/learning/term-modal';
-import { useTermSave } from '@/hooks/use-term-save';
+import { useToggleTermSave } from '@/hooks/queries/mutations';
 import type { NewsBodyData, QuizResult, Term } from '@/types/learning';
 import { BookOpen, ChevronDown, ChevronRight, ChevronUp, Tag } from 'lucide-react-native';
 import { useState } from 'react';
@@ -15,13 +15,13 @@ type Props = {
 export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
   const [activeTerm, setActiveTerm] = useState<Term | null>(null);
   const [showVocab, setShowVocab] = useState(false);
-  const {
-    isSaved: isTermSaved,
-    save,
-    unsave,
-  } = useTermSave(data.terms.filter((t) => t.isSaved).map((t) => t.id));
+  // 용어 저장 상태는 서버 값(terms[].isSaved)을 기준으로, 변경은 낙관적 업데이트 mutation
+  const toggleTerm = useToggleTermSave();
+  const save = (t: Term) => toggleTerm.mutate({ termId: t.id, next: true, newsId: data.newsId });
+  const unsave = (t: Term) => toggleTerm.mutate({ termId: t.id, next: false, newsId: data.newsId });
 
-  const allQuizAnswered = quizResults.length === data.quizzes.length;
+  const hasQuiz = data.quizzes.length > 0;
+  const allQuizAnswered = hasQuiz && quizResults.length === data.quizzes.length;
 
   return (
     <View>
@@ -137,7 +137,7 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
         {showVocab && (
           <View style={{ gap: 8 }}>
             {data.terms.map((term) => {
-              const isSaved = isTermSaved(term.id);
+              const isSaved = term.isSaved ?? false;
               return (
                 <TouchableOpacity
                   key={term.term}
@@ -194,102 +194,115 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
         )}
       </View>
 
-      {/* ── Divider ── */}
-      <View style={{ height: 8, backgroundColor: '#F6F6F8', marginTop: 20 }} />
+      {/* quizStatus: UNAVAILABLE이면 퀴즈 영역 숨김 / GENERATING이면 안내 문구 */}
+      {data.quizStatus !== 'UNAVAILABLE' && (
+        <>
+          {/* ── Divider ── */}
+          <View style={{ height: 8, backgroundColor: '#F6F6F8', marginTop: 20 }} />
 
-      {/* ── Quiz section ── */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 60 }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-            <Text
-              style={{ fontSize: 17, fontWeight: '800', color: '#22272B', letterSpacing: -0.4 }}
-            >
-              이해 확인 퀴즈
-            </Text>
+          {/* ── Quiz section ── */}
+          <View style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 60 }}>
             <View
-              style={{
-                backgroundColor: '#22272B',
-                borderRadius: 10,
-                paddingHorizontal: 7,
-                paddingVertical: 2,
-              }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: '700', color: '#FFDC53' }}>
-                {data.quizzes.length}
-              </Text>
-            </View>
-          </View>
-          {allQuizAnswered ? null : (
-            // 기존 접힌 상태 미리보기 카드 — onPress만 퀴즈 모드 진입으로 변경
-            <TouchableOpacity
-              onPress={onOpenQuiz}
-              activeOpacity={0.8}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 999,
-                padding: 8,
-                backgroundColor: '#F0EEEC',
+                justifyContent: 'space-between',
               }}
             >
-              <ChevronRight size={18} color="#898989" />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {allQuizAnswered ? (
-          // 이미 다 풀었으면 기존 완료 배너를 그대로 보여줌
-          <View
-            style={{
-              marginTop: 16,
-              width: '100%',
-              borderRadius: 16,
-              padding: 20,
-            }}
-          >
-            <View className="flex-row items-center gap-4">
-              <Image
-                source={require('@/assets/images/clap.png')}
-                style={{ width: 48, height: 48 }}
-                resizeMode="contain"
-              />
-              <View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
                 <Text
+                  style={{ fontSize: 17, fontWeight: '800', color: '#22272B', letterSpacing: -0.4 }}
+                >
+                  이해 확인 퀴즈
+                </Text>
+                <View
                   style={{
-                    fontSize: 20,
-                    fontWeight: '700',
-                    color: '#22272B',
-                    letterSpacing: -0.8,
+                    backgroundColor: '#22272B',
+                    borderRadius: 10,
+                    paddingHorizontal: 7,
+                    paddingVertical: 2,
                   }}
                 >
-                  짝짝짝!
-                </Text>
-                <Text style={{ fontSize: 14, color: '#6A7178', marginTop: 4 }}>
-                  퀴즈를 모두 풀었어요
-                </Text>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#FFDC53' }}>
+                    {data.quizzes.length}
+                  </Text>
+                </View>
               </View>
+              {allQuizAnswered || !hasQuiz ? null : (
+                // 기존 접힌 상태 미리보기 카드 — onPress만 퀴즈 모드 진입으로 변경
+                <TouchableOpacity
+                  onPress={onOpenQuiz}
+                  activeOpacity={0.8}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 999,
+                    padding: 8,
+                    backgroundColor: '#F0EEEC',
+                  }}
+                >
+                  <ChevronRight size={18} color="#898989" />
+                </TouchableOpacity>
+              )}
             </View>
+
+            {allQuizAnswered ? (
+              // 이미 다 풀었으면 기존 완료 배너를 그대로 보여줌
+              <View
+                style={{
+                  marginTop: 16,
+                  width: '100%',
+                  borderRadius: 16,
+                  padding: 20,
+                }}
+              >
+                <View className="flex-row items-center gap-4">
+                  <Image
+                    source={require('@/assets/images/clap.png')}
+                    style={{ width: 48, height: 48 }}
+                    resizeMode="contain"
+                  />
+                  <View>
+                    <Text
+                      style={{
+                        fontSize: 20,
+                        fontWeight: '700',
+                        color: '#22272B',
+                        letterSpacing: -0.8,
+                      }}
+                    >
+                      짝짝짝!
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#6A7178', marginTop: 4 }}>
+                      퀴즈를 모두 풀었어요
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ) : null}
+
+            {data.quizStatus === 'GENERATING' && !hasQuiz && (
+              <Text style={{ fontSize: 14, color: '#898989', marginTop: 12 }}>
+                퀴즈를 만들고 있어요. 잠시 후 다시 확인해주세요.
+              </Text>
+            )}
           </View>
-        ) : null}
-      </View>
+        </>
+      )}
 
       {/* ── Term Modal ── */}
       <TermModal
         term={activeTerm}
-        isSaved={activeTerm ? isTermSaved(activeTerm.id) : false}
+        isSaved={
+          activeTerm ? (data.terms.find((t) => t.id === activeTerm.id)?.isSaved ?? false) : false
+        }
         onSave={save}
         onUnsave={unsave}
         onClose={() => setActiveTerm(null)}
