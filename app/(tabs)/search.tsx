@@ -1,18 +1,14 @@
 import CategorySlider from '@/components/category-slider';
 import { GlassCard } from '@/components/common/glass';
 import SearchMorphBar from '@/components/search/SearchMorphBar';
-import {
-  useCategories,
-  useKeywords,
-  useSuggestions,
-  useTrending
-} from '@/hooks/queries/queries';
+import { useCategories, useKeywords, useSuggestions, useTrending } from '@/hooks/queries/queries';
 import { useRecentSearches } from '@/hooks/use-recent-search';
-import { KeywordDto } from '@/types/api/search';
+import type { Keyword, TrendingKeyword } from '@/types/search';
 import { router } from 'expo-router';
 import { ArrowRight, Clock, Minus, Search, TrendingDown, TrendingUp, X } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   BackHandler,
   Dimensions,
@@ -111,13 +107,21 @@ const TREND_ICON = {
   same: <Minus size={11} color={C.ink3} strokeWidth={2.5} />,
 } as const;
 
-function TrendingSection({ onPress }: { onPress: (q: string) => void }) {
-  const { data: trendingKeywords } = useTrending();
+function TrendingSection({
+  items,
+  onPress,
+}: {
+  items: TrendingKeyword[];
+  onPress: (q: string) => void;
+}) {
+  if (items.length === 0) {
+    return <Text style={{ fontSize: 13, color: C.ink2 }}>아직 트렌드가 없어요</Text>;
+  }
   return (
     <View style={{ flexDirection: 'row', gap: 8 }}>
-      {[trendingKeywords?.slice(0, 4), trendingKeywords?.slice(4, 8)].map((col, ci) => (
+      {[items.slice(0, 4), items.slice(4, 8)].map((col, ci) => (
         <View key={ci} style={{ flex: 1 }}>
-          {col?.map((item, i) => (
+          {col.map((item, i) => (
             <TouchableOpacity
               key={item.rank}
               onPress={() => onPress(item.keyword)}
@@ -159,16 +163,18 @@ function TrendingSection({ onPress }: { onPress: (q: string) => void }) {
 
 // ─── 자동완성 ─────────────────────────────────────────────────────────────────
 
-function SuggestionList({ query, onSelect }: { query: string; onSelect: (q: string) => void }) {
-  const { data: suggestionKeywords } = useSuggestions(query);
-  const matched =
-    suggestionKeywords
-      ?.filter((t) => t.keyword.toLowerCase().includes(query.toLowerCase()))
-      .map((m) => m.keyword) ?? [];
-
+function SuggestionList({
+  query,
+  suggestions,
+  onSelect,
+}: {
+  query: string;
+  suggestions: string[]; // GET /api/search/suggestions
+  onSelect: (q: string) => void;
+}) {
   const items = query.trim()
-    ? [query.trim(), ...matched.filter((k) => k !== query.trim())].slice(0, 6)
-    : matched.slice(0, 6);
+    ? [query.trim(), ...suggestions.filter((k) => k !== query.trim())].slice(0, 6)
+    : suggestions.slice(0, 6);
 
   if (items.length === 0) return null;
 
@@ -209,20 +215,29 @@ function SuggestionList({ query, onSelect }: { query: string; onSelect: (q: stri
 
 // ─── 키워드 카드 ──────────────────────────────────────────────────────────────
 
-function KeywordCard({ item, onPress }: { item: KeywordDto; onPress: () => void }) {
+function KeywordCard({ item, onPress }: { item: Keyword; onPress: () => void }) {
   const { width: screenWidth } = Dimensions.get('window');
   const cardWidth = (screenWidth - 32) / 2;
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
-      style={{ borderRadius: 16, overflow: 'hidden', width: cardWidth, height: 100 }}
+      style={{
+        borderRadius: 16,
+        overflow: 'hidden',
+        width: cardWidth,
+        height: 100,
+        backgroundColor: '#22272B',
+      }}
     >
-      <Image
-        source={{ uri: item.image }}
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-        resizeMode="cover"
-      />
+      {/* 키워드 응답에 이미지가 없을 수 있음 → 없으면 배경색만 */}
+      {item.image ? (
+        <Image
+          source={{ uri: item.image }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          resizeMode="cover"
+        />
+      ) : null}
       <View
         style={{
           position: 'absolute',
@@ -256,8 +271,15 @@ export default function SearchScreen() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const { recentSearches, addRecent, removeRecent, clearAllRecent } = useRecentSearches();
 
-  const { data: categories } = useCategories();
-  const { data: keywords } = useKeywords();
+  const { data: categories = [] } = useCategories(); // 매퍼가 '전체(all)' 추가
+  const { data: keywords = [], isLoading: keywordsLoading } = useKeywords();
+  const { data: trending = [] } = useTrending();
+  const [debounced, setDebounced] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(query.trim()), 250);
+    return () => clearTimeout(t);
+  }, [query]);
+  const { data: suggestions = [] } = useSuggestions(debounced);
 
   // 0 = 기본 화면(버튼), 1 = 검색 중(검색창). 검색바·그리드·오버레이가 이 값 하나로 같이 움직임
   const progress = useRef(new Animated.Value(0)).current;
@@ -304,9 +326,7 @@ export default function SearchScreen() {
   );
 
   const filteredKeywords =
-    selectedCategory === 'all'
-      ? keywords
-      : keywords?.filter((n) => (n as any).category === selectedCategory);
+    selectedCategory === 'all' ? keywords : keywords.filter((k) => k.category === selectedCategory);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F9F9F9' }} edges={['top']}>
@@ -328,15 +348,13 @@ export default function SearchScreen() {
           pointerEvents={isSearching ? 'none' : 'auto'}
           style={{ flex: 1, opacity: gridOpacity }}
         >
-          {categories && (
-            <View style={{ height: 80 }}>
-              <CategorySlider
-                category={categories}
-                selectedCategory={selectedCategory}
-                onPress={(id) => setSelectedCategory(id)}
-              />
-            </View>
-          )}
+          <View style={{ height: 80 }}>
+            <CategorySlider
+              category={categories}
+              selectedCategory={selectedCategory}
+              onPress={(id) => setSelectedCategory(id)}
+            />
+          </View>
           <FlatList
             data={filteredKeywords}
             numColumns={2}
@@ -355,19 +373,23 @@ export default function SearchScreen() {
               />
             )}
             ListEmptyComponent={
-              <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    color: C.ink,
-                    marginTop: 16,
-                    marginBottom: 8,
-                  }}
-                >
-                  해당 카테고리 키워드가 없어요
-                </Text>
-                <Text style={{ fontSize: 12, color: C.ink2 }}>다른 카테고리를 선택해보세요</Text>
-              </View>
+              keywordsLoading ? (
+                <ActivityIndicator style={{ marginTop: 40 }} color={C.ink2} />
+              ) : (
+                <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      color: C.ink,
+                      marginTop: 16,
+                      marginBottom: 8,
+                    }}
+                  >
+                    해당 카테고리 키워드가 없어요
+                  </Text>
+                  <Text style={{ fontSize: 12, color: C.ink2 }}>다른 카테고리를 선택해보세요</Text>
+                </View>
+              )
             }
           />
         </Animated.View>
@@ -383,7 +405,11 @@ export default function SearchScreen() {
           >
             {query.trim().length > 0 ? (
               <View style={{ marginBottom: 24 }}>
-                <SuggestionList query={query} onSelect={executeSearch} />
+                <SuggestionList
+                  query={query}
+                  suggestions={suggestions.map((s) => s.keyword)}
+                  onSelect={executeSearch}
+                />
               </View>
             ) : (
               <>
@@ -411,7 +437,7 @@ export default function SearchScreen() {
                   </View>
                 </View>
                 <GlassCard padding={16} radius={20} shadow="none">
-                  <TrendingSection onPress={executeSearch} />
+                  <TrendingSection items={trending} onPress={executeSearch} />
                 </GlassCard>
               </>
             )}
