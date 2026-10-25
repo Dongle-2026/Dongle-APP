@@ -1,31 +1,24 @@
 import { HttpError } from '@/services/api/client';
-import { authService } from '@/services/authService';
 import type { Provider } from '@/types/api/common';
-import * as AuthSession from 'expo-auth-session';
-import * as Google from 'expo-auth-session/providers/google';
-import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { authStore } from './authStore';
 
 WebBrowser.maybeCompleteAuthSession();
+const API_BASE_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000').replace(
+  /\/$/,
+  ''
+);
 
-// 백엔드(POST /api/auth/oauth/{provider})는 kakao | google 의 OIDC idToken(+nonce)만 지원한다.
-// 앱은 OIDC 인증 후 받은 idToken을 그대로 전달 → 백엔드가 서명·audience 검증.
-// 필요한 환경변수 (README 참고)
-const KAKAO_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY;
-const GOOGLE_WEB = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-const GOOGLE_IOS = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-const GOOGLE_ANDROID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
-
-export const socialConfigured = {
-  kakao: !!KAKAO_KEY,
-  google: !!(GOOGLE_WEB || GOOGLE_IOS || GOOGLE_ANDROID),
+// Spring 인증 완료 후 앱으로 돌아올 복귀 주소 (app.json의 scheme과 일치해야 함)
+const getRedirectUri = (provider: Provider) => {
+  return `exp://nqrnuqq-ktritofficial-8081.exp.direct/--/oauth/${provider}`;
 };
 
-// 키가 없으면 expo-auth-session이 hook 호출 시점에 예외를 던지므로 자리표시자를 넣고, 버튼은 비활성 처리한다.
-const UNSET = 'unset';
-const KAKAO_REDIRECT = AuthSession.makeRedirectUri({ path: 'oauth/kakao' }); // app.json 의 scheme 필요
+export const socialConfigured = {
+  kakao: true,
+  google: true,
+};
 
 function toMessage(e: unknown): string {
   if (e instanceof HttpError) {
@@ -41,64 +34,35 @@ function toMessage(e: unknown): string {
 export function useSocialLogin() {
   const [loading, setLoading] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const googleNonce = useRef(Crypto.randomUUID()).current;
-  const kakaoNonce = useRef(Crypto.randomUUID()).current;
 
-  const [, , googlePrompt] = Google.useIdTokenAuthRequest({
-    clientId: GOOGLE_WEB ?? UNSET,
-    iosClientId: GOOGLE_IOS ?? UNSET,
-    androidClientId: GOOGLE_ANDROID ?? UNSET,
-    extraParams: { nonce: googleNonce },
-  });
-
-  const kakaoDiscovery = AuthSession.useAutoDiscovery('https://kauth.kakao.com');
-  const [kakaoRequest, , kakaoPrompt] = AuthSession.useAuthRequest(
-    {
-      clientId: KAKAO_KEY ?? UNSET,
-      redirectUri: KAKAO_REDIRECT,
-      scopes: ['openid'],
-      responseType: AuthSession.ResponseType.Code,
-      usePKCE: true,
-      extraParams: { nonce: kakaoNonce },
-    },
-    kakaoDiscovery
-  );
-
-  /** 성공하면 토큰 저장(authStore.signIn)까지 끝낸다. 메인 화면 이동은 app/_layout.tsx 의 인증 분기가 처리. */
   const login = async (provider: Provider): Promise<boolean> => {
     setError(null);
     setLoading(provider);
     try {
-      let idToken: string | undefined;
-      let nonce: string;
+      const redirectUri = getRedirectUri(provider);
+      const authUrl = `${API_BASE_URL}/oauth2/authorization/${provider}`;
+      const res = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
 
-      if (provider === 'google') {
-        nonce = googleNonce;
-        const res = await googlePrompt();
-        if (res.type !== 'success') return false; // 사용자가 취소
-        idToken = res.params.id_token ?? res.authentication?.idToken;
-      } else {
-        nonce = kakaoNonce;
-        const res = await kakaoPrompt();
-        if (res.type !== 'success' || !kakaoDiscovery) return false;
-        const token = await AuthSession.exchangeCodeAsync(
-          {
-            clientId: KAKAO_KEY ?? UNSET,
-            code: res.params.code,
-            redirectUri: KAKAO_REDIRECT,
-            extraParams: kakaoRequest?.codeVerifier
-              ? { code_verifier: kakaoRequest.codeVerifier }
-              : undefined,
-          },
-          kakaoDiscovery
-        );
-        idToken = token.idToken;
+      if (res.type !== 'success' || !res.url) {
+        return false; // 사용자가 취소했거나 창을 닫음
       }
 
-      if (!idToken) throw new Error('ID 토큰을 받지 못했어요. 앱 키/OpenID 설정을 확인해주세요.');
-      const tokens = await authService.oauthLogin(provider, { idToken, nonce });
-      // tokens.newUser === true 이면 문서상 "온보딩" 대상이나 온보딩 화면/API 명세가 없어 구현하지 않음
-      await authStore.signIn(tokens);
+      const parsedUrl = new URL(res.url);
+
+      const accessToken =
+        parsedUrl.searchParams.get('accessToken') || parsedUrl.searchParams.get('token');
+      const refreshToken = parsedUrl.searchParams.get('refreshToken');
+
+      if (!accessToken || !refreshToken) {
+        throw new Error('인증 토큰을 전달받지 못했어요. 백엔드 리다이렉트 설정을 확인해주세요.');
+      }
+
+      await authStore.signIn({
+        accessToken,
+        refreshToken,
+        nickname: parsedUrl.searchParams.get('nickname') || '',
+      });
+
       return true;
     } catch (e) {
       setError(toMessage(e));
