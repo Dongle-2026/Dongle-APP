@@ -18,6 +18,7 @@ export const toCardNews = (d: NewsListItemDto): CardNews => ({
   description: d.summary ?? '',
   content: '',
   category: d.category,
+  image: (d as any).image ?? 'https://via.placeholder.com/300x200?text=Dongle',
   createdAt: d.publishedAt ?? '',
   updatedAt: d.publishedAt ?? '',
   isSaved: false,
