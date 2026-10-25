@@ -178,7 +178,7 @@ export default function NewsDetail({ newsId, image, title, cardRef, onClose }: N
                 />
                 <View className="w-full h-full">
                   <View className="flex-1 justify-end items-start pb-16 ml-8">
-                    <Text className="text-white text-3xl font-bold mb-2 leading-[42px] w-3/4">
+                    <Text className="text-white text-3xl font-bold mb-2 leading-[42px] w-4/5">
                       {news.title}
                     </Text>
                   </View>

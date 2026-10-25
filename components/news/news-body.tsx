@@ -91,6 +91,18 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
             <Text style={{ fontSize: 12, color: '#898989', fontWeight: '600' }}>{tag}</Text>
           </View>
         ))}
+        {data.source && (
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: '700',
+              marginVertical: 16,
+              color: '#22272B',
+            }}
+          >
+            출처: {data.source}
+          </Text>
+        )}
       </View>
 
       {/* ── Divider ── */}

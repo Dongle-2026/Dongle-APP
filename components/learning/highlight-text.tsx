@@ -1,10 +1,10 @@
-import type { TermDefinition } from '@/types/learning';
+import type { Term } from '@/types/learning';
 import { Text } from 'react-native';
 
 type Props = {
   text: string;
-  terms: TermDefinition[];
-  onTermPress: (term: TermDefinition) => void;
+  terms: Term[];
+  onTermPress: (term: Term) => void;
   style?: object;
 };
 
@@ -16,7 +16,7 @@ export default function HighlightText({ text, terms, onTermPress, style }: Props
   // 용어 목록을 길이 내림차순으로 정렬 (긴 단어 먼저 매칭)
   const sortedTerms = [...terms].sort((a, b) => b.term.length - a.term.length);
 
-  type Segment = { text: string; term: TermDefinition | null };
+  type Segment = { text: string; term: Term | null };
 
   const buildSegments = (input: string): Segment[] => {
     if (sortedTerms.length === 0) return [{ text: input, term: null }];
@@ -36,7 +36,7 @@ export default function HighlightText({ text, terms, onTermPress, style }: Props
   const segments = buildSegments(text);
 
   return (
-    <Text style={[{ fontSize: 16, lineHeight: 28, color: '#8A8A8D' }, style]}>
+    <Text style={[{ fontSize: 16, lineHeight: 28, color: '#484849' }, style]}>
       {segments.map((seg, i) =>
         seg.term ? (
           <Text key={`${seg.text}-${i}`}>
