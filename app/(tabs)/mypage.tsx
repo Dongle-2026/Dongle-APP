@@ -98,7 +98,7 @@ export default function MypageScreen() {
       await updateProfile.mutateAsync({
         params: {
           nickname: input.nickname,
-          bio: input.bio, // 빈 문자열이면 소개 삭제
+          bio: input.bio,
           avatarId: input.avatarId,
           removeImage: input.image === null ? true : undefined, // image와 removeImage 동시 전송 금지
         },
@@ -154,6 +154,7 @@ export default function MypageScreen() {
             paddingHorizontal: 20,
             paddingBottom: 4,
             gap: 8,
+            paddingTop: 8,
           }}
         >
           <Text className="text-[32px]">마이페이지</Text>

@@ -13,28 +13,21 @@ import type {
   UpdateProfileParams,
 } from '@/types/api/me';
 import type { PickedImage } from '@/types/mypage';
+import { File } from 'expo-file-system';
 import { http } from './api/client';
 
 export const meService = {
   me: () => http.get<MeDto>('/api/me'),
-  // 문서: nickname/bio/avatarId/removeImage 는 쿼리, image 는 multipart. bio="" 는 소개 삭제
   updateProfile: (params: UpdateProfileParams, image?: PickedImage | null) => {
-    let form: FormData | undefined;
+    const form = new FormData();
 
-    // 💡 오직 이미지 파일만 FormData에 담습니다.
     if (image && image.uri) {
-      form = new FormData();
-      const uriParts = image.uri.split('/');
-      const generatedFileName = uriParts[uriParts.length - 1] || 'profile.jpg';
-
-      form.append('image', {
-        uri: image.uri,
-        name: image.fileName || generatedFileName,
-        type: image.mimeType || 'image/jpeg',
-      } as any);
+      const imageFile = new File(image.uri);
+      form.append('image', imageFile as any);
+    } else {
+      form.append('noop', '1');
     }
 
-    // 💡 텍스트와 boolean 값은 Swagger 스펙대로 query로 보냅니다.
     return http.patch<MeDto>('/api/me/profile', {
       query: {
         nickname: params.nickname,
@@ -42,7 +35,7 @@ export const meService = {
         avatarId: params.avatarId,
         removeImage: params.removeImage,
       },
-      form, // 이미지만 멀티파트로 전달
+      form,
     });
   },
   withdraw: () => http.delete<void>('/api/me'),
