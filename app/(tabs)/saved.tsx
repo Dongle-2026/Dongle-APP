@@ -52,7 +52,6 @@ function MiniNewsCard({ item }: MiniNewsCardProps) {
           backgroundColor: '#F0EEEC',
         }}
       >
-        {/* 저장/읽음 응답에 썸네일이 없음 → 없으면 배경색 박스만 */}
         {item.image ? (
           <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} />
         ) : null}

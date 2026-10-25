@@ -2,7 +2,6 @@ import { GlassIconButton } from '@/components/common/glass';
 import { useNewsDetail } from '@/context/NewsDetailContext';
 import { useNewsSearch } from '@/hooks/queries/queries';
 import { CardNews } from '@/types';
-import { MOCK_IMAGES } from '@/utils/mock';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Search } from 'lucide-react-native';
@@ -43,11 +42,11 @@ function NewsGridCard({
         backgroundColor: '#D9D9D9',
       }}
     >
-      {/* <Image
-        source={{ uri: MOCK_IMAGE }}
+      <Image
+        source={{ uri: item.image }}
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         resizeMode="cover"
-      /> */}
+      />
       <LinearGradient
         colors={['rgba(0,0,0,0.01)', 'rgba(0,0,0,0.05)', 'rgba(0,0,0,0.82)']}
         start={{ x: 0, y: 0 }}
@@ -62,22 +61,18 @@ function NewsGridCard({
             flexDirection: 'row',
             alignItems: 'center',
             gap: 4,
-            padding: 6,
+            paddingVertical: 6,
+            paddingHorizontal: 8,
             backgroundColor: '#fff',
             borderRadius: 999,
           }}
         >
-          <Image
-            source={require('@/assets/images/logo.png')}
-            style={{ width: 10, height: 10 }}
-            resizeMode="cover"
-          />
           <Text style={{ fontSize: 10, fontWeight: '600' }}>{item.category}</Text>
         </View>
         <View style={{ flex: 1, justifyContent: 'flex-end', padding: 12, paddingBottom: 24 }}>
           <Text
             numberOfLines={3}
-            style={{ fontSize: 17, fontWeight: '600', color: '#fff', lineHeight: 23 }}
+            style={{ fontSize: 17, fontWeight: '600', color: '#fff', lineHeight: 24 }}
           >
             {item.title}
           </Text>
@@ -119,7 +114,7 @@ export default function NewsListScreen() {
   const newsData = newsList ?? [];
 
   const handleCardPress = (item: CardNews, cardRef: RefObject<View | null>) => {
-    open({ newsId: String(item.id), image: MOCK_IMAGES[0], title: item.title, cardRef });
+    open({ newsId: String(item.id), image: item.image, title: item.title, cardRef });
   };
 
   if (isLoading) {

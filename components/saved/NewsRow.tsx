@@ -2,7 +2,7 @@ import { glass } from '@/components/common/glass';
 import { useNewsDetail } from '@/context/NewsDetailContext';
 import type { ReadHistory, SavedNews } from '@/types/saved';
 import { formatRelative } from '@/utils/format';
-import { Bookmark, ChevronRight, Clock } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { useRef } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 
@@ -57,18 +57,9 @@ export default function NewsRow({
           {item.title}
         </Text>
         {meta ? <Text style={{ fontSize: 12, color: glass.inkMuted }}>{meta}</Text> : null}
-        {variant === 'recent' && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Clock size={11} color={glass.inkMuted} />
-            <Text style={{ fontSize: 11, color: glass.inkMuted }}>읽음</Text>
-          </View>
-        )}
       </View>
-      {variant === 'saved' ? (
-        <Bookmark size={18} color={glass.ink} fill="#FFDC53" />
-      ) : (
-        <ChevronRight size={16} color={glass.inkMuted} />
-      )}
+
+      <ChevronRight size={16} color={glass.inkMuted} />
     </TouchableOpacity>
   );
 }
