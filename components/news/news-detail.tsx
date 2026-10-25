@@ -162,9 +162,9 @@ export default function NewsDetail({ newsId, image, title, cardRef, onClose }: N
             {/* 카드뉴스 (기존 컴포넌트) */}
             <View className="h-[440px]">
               <View className="flex-1 overflow-hidden ">
-                {news.image ? (
+                {image ? (
                   <Image
-                    source={{ uri: news.image }}
+                    source={{ uri: image }}
                     className="absolute inset-0 w-full h-full"
                     resizeMode="cover"
                   />

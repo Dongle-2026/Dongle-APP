@@ -21,7 +21,8 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
   const unsave = (t: Term) => toggleTerm.mutate({ termId: t.id, next: false, newsId: data.newsId });
 
   const hasQuiz = data.quizzes.length > 0;
-  const allQuizAnswered = hasQuiz && quizResults.length === data.quizzes.length;
+  const isAllCorrect =
+    hasQuiz && quizResults.length === data.quizzes.length && quizResults.every((r) => r.isCorrect);
 
   return (
     <View>
@@ -30,7 +31,6 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
         {/* Headline */}
         <Text
           style={{
-            width: '85%',
             fontSize: 17,
             fontWeight: '500',
             lineHeight: 26,
@@ -63,6 +63,21 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
         </View>
       </View>
 
+      {data.source && (
+        <View className="px-4">
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              marginVertical: 8,
+              color: '#22272B',
+            }}
+          >
+            출처: {data.source}
+          </Text>
+        </View>
+      )}
+
       {/* ── Tags ── */}
       <View
         style={{
@@ -91,18 +106,6 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
             <Text style={{ fontSize: 12, color: '#898989', fontWeight: '600' }}>{tag}</Text>
           </View>
         ))}
-        {data.source && (
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: '700',
-              marginVertical: 16,
-              color: '#22272B',
-            }}
-          >
-            출처: {data.source}
-          </Text>
-        )}
       </View>
 
       {/* ── Divider ── */}
@@ -246,7 +249,7 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
                   </Text>
                 </View>
               </View>
-              {allQuizAnswered || !hasQuiz ? null : (
+              {isAllCorrect || !hasQuiz ? null : (
                 // 기존 접힌 상태 미리보기 카드 — onPress만 퀴즈 모드 진입으로 변경
                 <TouchableOpacity
                   onPress={onOpenQuiz}
@@ -265,7 +268,7 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
               )}
             </View>
 
-            {allQuizAnswered ? (
+            {isAllCorrect ? (
               // 이미 다 풀었으면 기존 완료 배너를 그대로 보여줌
               <View
                 style={{

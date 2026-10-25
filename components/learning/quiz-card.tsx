@@ -12,22 +12,27 @@ type Props = {
 
 export default function QuizCard({ quiz, index, result, onAnswer }: Props) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(result?.selectedIndex ?? null);
-  const [showExplanation, setShowExplanation] = useState(!!result);
+
+  // 💡 본문 퀴즈 객체에는 explanation이 없고, 백엔드 제출 결과(result)에만 오므로 result 존재 여부로 확인
+  const [explanation, setExplanation] = useState<string | undefined>(result?.explanation);
+  const [correctIndex, setCorrectIndex] = useState<number | undefined>(result?.correctIndex);
 
   const honeyAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const isRevealed = showExplanation;
+  // 이미 풀었거나 결과를 받았으면 해설 및 정답 공개 상태
+  const isRevealed = result !== undefined || selectedIndex !== null;
+  const isCorrectAnswer =
+    result?.isCorrect ?? (correctIndex !== null && selectedIndex === correctIndex);
 
   const handleSelect = (choiceIndex: number) => {
     if (isRevealed) return;
-    const isCorrect = choiceIndex === quiz.answerIndex;
-    const earned = isCorrect ? quiz.honey : 0;
 
     setSelectedIndex(choiceIndex);
-    setShowExplanation(true);
 
-    // Honey pop animation (correct only)
+    const isCorrect = choiceIndex === correctIndex;
+    const earned = isCorrect ? quiz.honey : 0;
+
     if (isCorrect) {
       Animated.sequence([
         Animated.spring(scaleAnim, {
@@ -49,11 +54,12 @@ export default function QuizCard({ quiz, index, result, onAnswer }: Props) {
       }).start();
     }
 
+    // 부모 컴포넌트로 선택한 인덱스 전달 (백엔드 제출 API 호출 트리거)
     onAnswer({
       quizId: quiz.id,
       selectedIndex: choiceIndex,
-      isCorrect,
-      earnedHoney: earned,
+      isCorrect: false, // 백엔드 검증 전 기본값
+      earnedHoney: 0,
     });
   };
 
@@ -64,23 +70,29 @@ export default function QuizCard({ quiz, index, result, onAnswer }: Props) {
         borderColor: '#F0EEEC',
       };
     }
-    if (i === quiz.answerIndex) {
-      return { backgroundColor: '#EDFBF0', borderColor: '#34c759' };
-    }
-    if (i === selectedIndex && i !== quiz.answerIndex) {
-      return { backgroundColor: '#FFF0F0', borderColor: '#FF3B30' };
+    if (correctIndex !== undefined) {
+      if (i === correctIndex) {
+        return { backgroundColor: '#EDFBF0', borderColor: '#34c759' };
+      }
+      if (i === selectedIndex && i !== correctIndex) {
+        return { backgroundColor: '#FFF0F0', borderColor: '#FF3B30' };
+      }
+    } else {
+      if (i === selectedIndex) {
+        return { backgroundColor: '#F0EEEC', borderColor: '#22272B' };
+      }
     }
     return { backgroundColor: '#F9F9F9', borderColor: '#F0EEEC' };
   };
 
   const getChoiceTextColor = (i: number) => {
     if (!isRevealed) return '#22272B';
-    if (i === quiz.answerIndex) return '#1a7a35';
-    if (i === selectedIndex && i !== quiz.answerIndex) return '#c0392b';
+    if (correctIndex !== undefined) {
+      if (i === correctIndex) return '#1a7a35';
+      if (i === selectedIndex && i !== correctIndex) return '#c0392b';
+    }
     return '#898989';
   };
-
-  const isCorrectAnswer = selectedIndex === quiz.answerIndex;
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -130,20 +142,20 @@ export default function QuizCard({ quiz, index, result, onAnswer }: Props) {
           </View>
 
           {/* Result badge */}
-          {isRevealed && (
+          {isRevealed && result && (
             <Animated.View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 4,
-                backgroundColor: isCorrectAnswer ? '#EDFBF0' : '#FFF0F0',
+                backgroundColor: result.isCorrect ? '#EDFBF0' : '#FFF0F0',
                 paddingHorizontal: 10,
                 paddingVertical: 4,
                 borderRadius: 20,
-                opacity: isCorrectAnswer ? honeyAnim : 1,
+                opacity: result.isCorrect ? honeyAnim : 1,
               }}
             >
-              {isCorrectAnswer ? (
+              {result.isCorrect ? (
                 <>
                   <CheckCircle2 size={13} color="#34c759" />
                   <Text style={{ fontSize: 11, fontWeight: '700', color: '#1a7a35' }}>
@@ -180,8 +192,8 @@ export default function QuizCard({ quiz, index, result, onAnswer }: Props) {
             const choiceStyle = getChoiceStyle(i);
             const textColor = getChoiceTextColor(i);
             const isSelected = selectedIndex === i;
-            const isCorrect = i === quiz.answerIndex;
-            const showIcon = isRevealed && (isCorrect || isSelected);
+            const isCorrectTarget = correctIndex !== undefined && i === correctIndex;
+            const showIcon = isRevealed && (isCorrectTarget || isSelected);
 
             return (
               <TouchableOpacity
@@ -206,9 +218,9 @@ export default function QuizCard({ quiz, index, result, onAnswer }: Props) {
                     height: 24,
                     borderRadius: 7,
                     backgroundColor:
-                      isRevealed && isCorrect
+                      isRevealed && isCorrectTarget
                         ? '#34c759'
-                        : isRevealed && isSelected && !isCorrect
+                        : isRevealed && isSelected && !isCorrectTarget
                           ? '#FF3B30'
                           : '#F0EEEC',
                     alignItems: 'center',
@@ -217,7 +229,7 @@ export default function QuizCard({ quiz, index, result, onAnswer }: Props) {
                   }}
                 >
                   {showIcon ? (
-                    isCorrect ? (
+                    isCorrectTarget ? (
                       <CheckCircle2 size={14} color="#fff" />
                     ) : (
                       <XCircle size={14} color="#fff" />
@@ -239,7 +251,7 @@ export default function QuizCard({ quiz, index, result, onAnswer }: Props) {
                   style={{
                     flex: 1,
                     fontSize: 14,
-                    fontWeight: isSelected || isCorrect ? '600' : '400',
+                    fontWeight: isSelected || isCorrectTarget ? '600' : '400',
                     color: textColor,
                     lineHeight: 20,
                   }}
@@ -251,8 +263,8 @@ export default function QuizCard({ quiz, index, result, onAnswer }: Props) {
           })}
         </View>
 
-        {/* Explanation */}
-        {isRevealed && (
+        {/* Explanation (백엔드 결과에 포함되어 내려올 때만 표시) */}
+        {isRevealed && result?.explanation && (
           <View
             style={{
               marginTop: 16,
@@ -267,7 +279,7 @@ export default function QuizCard({ quiz, index, result, onAnswer }: Props) {
               💡 해설
             </Text>
             <Text style={{ fontSize: 13, color: '#22272B', lineHeight: 21 }}>
-              {quiz.explanation}
+              {result.explanation}
             </Text>
           </View>
         )}

@@ -2,16 +2,17 @@ import { GlassButton, GlassIconButton } from '@/components/common/glass';
 import QuizOption, { QUIZ_COLORS, type OptionStatus } from '@/components/quiz/QuizOption';
 import QuizProgress from '@/components/quiz/QuizProgress';
 import QuizResultView from '@/components/quiz/QuizResult';
+import { useSubmitQuizAnswer } from '@/hooks/queries/mutations';
 import type { Quiz, QuizResult } from '@/types/learning';
 import { CheckCircle2, ChevronLeft, XCircle } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, BackHandler, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, BackHandler, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = {
   quizzes: Quiz[];
   results: QuizResult[]; // news-body의 기존 quizResults 재사용 → 별도 정답 상태를 만들지 않음
-  onAnswer: (r: QuizResult) => void; // 기존 handleQuizAnswer
+  onAnswer: (r: QuizResult) => void; // 문제를 맞혔을 때만 호출 (기존 handleQuizAnswer)
   onClose: () => void;
 };
 
@@ -30,6 +31,11 @@ export default function QuizMode({ quizzes, results, onAnswer, onClose }: Props)
   const totalHoney = results.reduce((s, r) => s + r.earnedHoney, 0);
   const correctCount = results.filter((r) => r.isCorrect).length;
   const isLast = index === quizzes.length - 1;
+
+  // 재도전: 현재 문제에서 틀린 선택지(정답·해설은 노출하지 않음)
+  const [wrong, setWrong] = useState<number[]>([]);
+  const submit = useSubmitQuizAnswer();
+  const lastWrong = wrong[wrong.length - 1];
 
   const enter = useRef(new Animated.Value(0)).current; // 퀴즈 모드 등장/퇴장
   const content = useRef(new Animated.Value(1)).current; // 퀴즈 → 결과 fade
@@ -50,17 +56,35 @@ export default function QuizMode({ quizzes, results, onAnswer, onClose }: Props)
     return () => sub.remove();
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSelect = (i: number) => {
-    if (answered) return; // 답 변경 불가
-    const isCorrect = i === quiz.answerIndex;
-    onAnswer({
-      quizId: quiz.id,
-      selectedIndex: i,
-      isCorrect,
-      earnedHoney: isCorrect ? quiz.honey : 0,
-    });
-    reveal.setValue(0);
-    anim(reveal, 1, 280, 180).start(); // 카드 애니메이션 뒤에 해설/다음 버튼 등장
+  const handleSelect = async (i: number) => {
+    if (answered || submit.isPending) return;
+    try {
+      const res = await submit.mutateAsync({ quizId: quiz.id, selectedIndex: i });
+
+      // 정답/오답 결과 모두 저장
+      onAnswer({
+        quizId: quiz.id,
+        selectedIndex: i,
+        isCorrect: res.isCorrect,
+        earnedHoney: res.earnedHoney,
+        alreadySolved: res.alreadySolved,
+        correctIndex: res.correctIndex,
+        explanation: res.explanation,
+      });
+
+      if (res.isCorrect) {
+        // 정답: 해설 및 '다음 문제' 버튼 노출
+        reveal.setValue(0);
+        anim(reveal, 1, 280, 180).start();
+      } else {
+        // 오답: 해설 없이 0.5초 동안 빨간색 오답 피드백만 노출 후 다음 문제로 자동 이동
+        setTimeout(() => {
+          goNext();
+        }, 500);
+      }
+    } catch {
+      Alert.alert('제출 실패', '네트워크 상태를 확인하고 다시 시도해주세요.');
+    }
   };
 
   const goNext = () => {
@@ -69,6 +93,7 @@ export default function QuizMode({ quizzes, results, onAnswer, onClose }: Props)
       return;
     }
     Animated.parallel([anim(slide, 0, 160), anim(shiftX, -24, 160)]).start(() => {
+      setWrong([]);
       setIndex((i) => i + 1);
       reveal.setValue(0);
       slide.setValue(0);
@@ -77,14 +102,18 @@ export default function QuizMode({ quizzes, results, onAnswer, onClose }: Props)
     });
   };
 
-  const statusOf = (i: number): OptionStatus =>
-    !result
-      ? 'idle'
-      : i === quiz.answerIndex
-        ? 'correct'
-        : i === result.selectedIndex
-          ? 'wrong'
-          : 'dim';
+  const statusOf = (i: number): OptionStatus => {
+    if (!result) return 'idle';
+
+    if (result.isCorrect) {
+      // 정답을 맞힌 경우
+      return i === result.selectedIndex || i === result.correctIndex ? 'correct' : 'dim';
+    } else {
+      // 오답인 경우: 내가 찍은건 빨강(wrong), 나머지는 dim
+      if (i === result.selectedIndex) return 'wrong';
+      return 'dim';
+    }
+  };
 
   const up = (v: Animated.Value, from: number) => ({
     opacity: v,
@@ -159,31 +188,39 @@ export default function QuizMode({ quizzes, results, onAnswer, onClose }: Props)
                     Q{index + 1}
                   </Text>
                 </View>
+
+                {/* 정답/오답 상태 표시 */}
                 {result && (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'flex-end',
-                      gap: 6,
-                    }}
-                  >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     {result.isCorrect ? (
-                      <CheckCircle2 size={18} color={QUIZ_COLORS.correct.border} />
+                      <>
+                        <CheckCircle2 size={18} color={QUIZ_COLORS.correct.border} />
+                        <Text
+                          style={{
+                            fontSize: 16,
+                            fontWeight: '700',
+                            color: QUIZ_COLORS.correct.border,
+                          }}
+                        >
+                          {result.earnedHoney > 0
+                            ? `정답이에요! +${result.earnedHoney}P`
+                            : '정답이에요!'}
+                        </Text>
+                      </>
                     ) : (
-                      <XCircle size={18} color={QUIZ_COLORS.wrong.border} />
+                      <>
+                        <XCircle size={18} color={QUIZ_COLORS.wrong.border} />
+                        <Text
+                          style={{
+                            fontSize: 16,
+                            fontWeight: '700',
+                            color: QUIZ_COLORS.wrong.border,
+                          }}
+                        >
+                          오답이에요!
+                        </Text>
+                      </>
                     )}
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: '700',
-                        color: result.isCorrect
-                          ? QUIZ_COLORS.correct.border
-                          : QUIZ_COLORS.wrong.border,
-                      }}
-                    >
-                      {result.isCorrect ? `정답이에요! +${quiz.honey}P` : '아쉬워요!'}
-                    </Text>
                   </View>
                 )}
               </View>
@@ -211,14 +248,14 @@ export default function QuizMode({ quizzes, results, onAnswer, onClose }: Props)
                     text={c.text}
                     status={statusOf(i)}
                     selected={result?.selectedIndex === i}
-                    disabled={answered}
+                    disabled={answered || submit.isPending}
                     onPress={() => handleSelect(i)}
                   />
                 ))}
               </View>
 
               {/* 해설: 기존 QuizCard의 해설 박스 스타일 그대로 + 정답/오답 헤더 */}
-              {result && (
+              {result?.explanation && (
                 <Animated.View style={[{ marginTop: 40 }, up(reveal, 12)]}>
                   <View
                     style={{
@@ -232,7 +269,7 @@ export default function QuizMode({ quizzes, results, onAnswer, onClose }: Props)
                       💡 해설
                     </Text>
                     <Text style={{ fontSize: 14, color: '#22272B', lineHeight: 24 }}>
-                      {quiz.explanation}
+                      {result.explanation}
                     </Text>
                   </View>
                 </Animated.View>

@@ -105,7 +105,6 @@ export default function QuizResult({ totalHoney, correctCount, totalCount, onDon
         </View>
         <View
           style={{
-            backgroundColor: '#EEEEEF',
             width: '100%',
             borderRadius: 16,
             paddingVertical: 28,
@@ -131,7 +130,7 @@ export default function QuizResult({ totalHoney, correctCount, totalCount, onDon
             <View
               style={{
                 marginTop: 16,
-                paddingHorizontal: 16,
+                paddingHorizontal: 12,
                 paddingVertical: 12,
                 backgroundColor: '#F5F5F5',
                 borderRadius: 14,
