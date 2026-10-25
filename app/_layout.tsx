@@ -89,14 +89,11 @@ function RootLayoutNav() {
   // 인증 상태에 따른 화면 분기
   useEffect(() => {
     // 현재 경로가 로그인 화면인지 여부를 유연하게 체크
-    const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'login';
+    const inAuthGroup = segments[0] === '(auth)';
 
     if (status === 'anon' && !inAuthGroup) {
-      // 비로그인 상태인데 인증 화면이 아니면 로그인으로 이동
-      // 만약 login.tsx가 루트에 있다면 '/login', (auth) 그룹에 있다면 '/(auth)/login'으로 맞춰주세요.
-      router.replace('/login');
+      router.replace('/(auth)/login');
     } else if (status === 'authed' && inAuthGroup) {
-      // 로그인 상태인데 로그인 화면에 머물러 있으면 메인 화면으로 이동
       router.replace('/(tabs)');
     }
   }, [status, segments, router]);
@@ -108,10 +105,6 @@ function RootLayoutNav() {
           <Stack>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="login"
-              options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }}
-            />
             <Stack.Screen name="news-list" options={{ headerShown: false }} />
             <Stack.Screen name="glass-demo" options={{ headerShown: false }} />
           </Stack>
