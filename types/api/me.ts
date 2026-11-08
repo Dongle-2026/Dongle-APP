@@ -36,6 +36,7 @@ export interface SavedTermDto {
 export interface SavedNewsDto {
   articleId: number;
   title: string;
+  image: string;
   sourceName: string;
   category: string;
   publishedAt: ISODateTime;
@@ -44,6 +45,7 @@ export interface SavedNewsDto {
 export interface ReadHistoryDto {
   articleId: number;
   title: string;
+  image: string;
   sourceName: string;
   category: string;
   publishedAt: ISODateTime;

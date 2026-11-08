@@ -1,4 +1,5 @@
 import { glass } from '@/components/common/glass';
+import { DEFAULT_IMAGE } from '@/constants/common';
 import { useNewsDetail } from '@/context/NewsDetailContext';
 import type { ReadHistory, SavedNews } from '@/types/saved';
 import { formatRelative } from '@/utils/format';
@@ -44,10 +45,10 @@ export default function NewsRow({
           backgroundColor: '#F0EEEC',
         }}
       >
-        {/* 응답에 썸네일이 없으면 배경색 박스만 */}
-        {item.image ? (
-          <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} />
-        ) : null}
+        <Image
+          source={{ uri: item.image || DEFAULT_IMAGE }}
+          style={{ width: '100%', height: '100%' }}
+        />
       </View>
       <View style={{ flex: 1, gap: 4 }}>
         <Text

@@ -1,11 +1,11 @@
 import HomeHeader from '@/components/home/HomeHeader';
 import NewsPost from '@/components/news/news-post';
 import { useNewsDetail } from '@/context/NewsDetailContext';
-import { newsService } from '@/services/newsService';
+import { useFeed } from '@/hooks/queries/queries';
 import type { CardNews } from '@/types';
 import { useNavigation } from 'expo-router';
 import type { RefObject } from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'; // [NEW] useMemo
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -35,56 +35,27 @@ function NewsItem({
 export default function HomeScreen() {
   const { open } = useNewsDetail();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation(); // [NEW]
+  const navigation = useNavigation();
 
-  const [news, setNews] = useState<CardNews[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  // 서버 상태는 TanStack Query가 관리 (Spring Page: 0부터, 다음 페이지 = !last)
+  const feed = useFeed();
+  const news = feed.data ?? [];
+  const loading = feed.isLoading;
+  const refreshing = feed.isRefetching && !feed.isFetchingNextPage; // 다음 페이지 로딩과 구분
+  const hasMore = !!feed.hasNextPage;
+  const error = feed.error ? feed.error.message : null;
   const handleCardPress = (item: CardNews, cardRef: RefObject<View | null>) => {
-    if (!item.image || !item.title) return;
-    open({ newsId: item.id, image: item.image, title: item.title, cardRef });
+    if (!item.title) return;
+    open({ newsId: item.id, image: item.image ?? '', title: item.title, cardRef });
   };
 
-  const fetchNews = useCallback(async (pageNum = 1, isRefresh = false) => {
-    try {
-      if (isRefresh) setRefreshing(true);
-      else if (pageNum === 1) setLoading(true);
-
-      const response = await newsService.getLatestNews(pageNum, 10);
-      const data = response.data ?? [];
-
-      if (data.length > 0) {
-        if (isRefresh || pageNum === 1) {
-          setNews(data);
-          setPage(2);
-        } else {
-          setNews((prev) => [...prev, ...data]);
-          setPage(pageNum + 1);
-        }
-        setHasMore(data.length === 10);
-        setError(null);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '뉴스를 불러올 수 없습니다.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchNews(1);
-  }, [fetchNews]);
-
-  const handleRefresh = useCallback(() => fetchNews(1, true), [fetchNews]);
+  const handleRefresh = useCallback(() => {
+    void feed.refetch();
+  }, [feed.refetch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleEndReached = useCallback(() => {
-    if (!loading && !refreshing && hasMore) fetchNews(page);
-  }, [page, loading, refreshing, hasMore, fetchNews]);
+    if (!loading && !refreshing && hasMore && !feed.isFetchingNextPage) void feed.fetchNextPage();
+  }, [loading, refreshing, hasMore, feed.isFetchingNextPage, feed.fetchNextPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const [headerH, setHeaderH] = useState(160); // onLayout으로 실제 높이로 교체됨

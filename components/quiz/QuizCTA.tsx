@@ -142,8 +142,8 @@ export default function QuizCTA({ visible, maxHoney, onStart, onClose }: Props) 
             }}
           >
             <Image
-              source={require('@/assets/avatars/happy.png')}
-              style={{ width: 43, height: 50 }}
+              source={require('@/assets/avatars/hmm.png')}
+              style={{ width: 50, height: 58 }}
               resizeMode="contain"
             />
           </View>

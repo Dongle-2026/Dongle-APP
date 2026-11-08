@@ -32,10 +32,27 @@ const nextPage = (last: Page<unknown>) => (last.last ? undefined : last.number +
 export const useFeed = (filter: Pick<NewsListParams, 'category' | 'keyword' | 'date'> = {}) =>
   useInfiniteQuery({
     queryKey: qk.news.feed(filter),
-    queryFn: ({ pageParam }) => newsService.list({ ...filter, page: pageParam, size: PAGE_SIZE }),
-    initialPageParam: 0,
-    getNextPageParam: nextPage,
-    select: (d) => d.pages.flatMap((p) => p.content.map(toCardNews)),
+    queryFn: ({ pageParam }) =>
+      newsService.list({
+        ...filter,
+        page: pageParam,
+        limit: PAGE_SIZE,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const items = Array.isArray(lastPage) ? lastPage : lastPage?.content || [];
+
+      if (items.length < PAGE_SIZE) {
+        return undefined;
+      }
+
+      return allPages.length + 1;
+    },
+    select: (d) =>
+      d.pages.flatMap((p) => {
+        const items = Array.isArray(p) ? p : p?.content || [];
+        return items.map(toCardNews);
+      }),
     staleTime: 60_000,
   });
 
@@ -147,10 +164,10 @@ export const useCategories = () =>
     select: toCategories,
     staleTime: 60 * 60_000,
   });
-export const useKeywords = () =>
+export const useKeywords = (category?: string, limit = 10) =>
   useQuery({
-    queryKey: qk.search.keywords,
-    queryFn: () => searchService.keywords(),
+    queryKey: [...qk.search.keywords, category, limit],
+    queryFn: () => searchService.keywords(category, limit),
     select: toKeywords,
     staleTime: 10 * 60_000,
   });

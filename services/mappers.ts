@@ -1,4 +1,5 @@
 // 백엔드 DTO → 프로젝트의 화면용 타입. 화면에서 임시 변환하지 않고 이 파일에서만 변환한다.
+import { DEFAULT_IMAGE } from '@/constants/common';
 import type { CardNews } from '@/types';
 import type { ActivityDayDto, InsightsDto, NewsBodyDto, StatsDto } from '@/types/api/learning';
 import type { MeDto, ReadHistoryDto, SavedNewsDto, SavedTermDto } from '@/types/api/me';
@@ -13,15 +14,22 @@ const id = (n: number | string) => String(n);
 
 // 목록 응답엔 썸네일·저장 여부가 없다 (image 없음, isSaved=false 는 "알 수 없음"의 기본값)
 export const toCardNews = (d: NewsListItemDto): CardNews => ({
-  id: id(d.id),
+  id: String(d.id),
   title: d.title,
-  description: d.summary ?? '',
-  content: '',
+  description: d.description || d.summary || '',
+  content: d.content || '',
   category: d.category,
-  image: (d as any).image ?? 'https://via.placeholder.com/300x200?text=Dongle',
-  createdAt: d.publishedAt ?? '',
-  updatedAt: d.publishedAt ?? '',
-  isSaved: false,
+  image: d.image || DEFAULT_IMAGE,
+  createdAt: d.createdAt || d.publishedAt || '',
+  updatedAt: d.updatedAt || d.publishedAt || '',
+  isSaved: d.isSaved ?? false,
+  slides: d.slides?.map((slide: any) => ({
+    id: String(slide.id),
+    type: slide.type || 'content',
+    title: slide.title, // '기사의 핵심', '주요 내용' 등 슬라이드별 제목/뱃지 역할
+    description: slide.description, // 본문 내용
+    image: slide.image || d.image || DEFAULT_IMAGE, // 슬라이드별 이미지가 없으면 메인 이미지 상속
+  })),
 });
 
 export const toCardNewsDetail = (d: NewsDetailDto, bookmarked = false): CardNews => ({
@@ -106,11 +114,10 @@ export const toSavedTerm = (d: SavedTermDto): SavedTerm => ({
   definition: d.simpleDefinition,
 });
 
-// 저장/읽음 응답에도 썸네일이 없어 image=''  (화면에서 falsy면 이미지를 그리지 않도록)
 export const toSavedNews = (d: SavedNewsDto): SavedNews => ({
   id: id(d.articleId),
   title: d.title,
-  image: '',
+  image: d.image,
   category: d.category,
   createdAt: d.publishedAt,
   isSaved: true,
@@ -119,16 +126,17 @@ export const toSavedNews = (d: SavedNewsDto): SavedNews => ({
 export const toReadHistory = (d: ReadHistoryDto): ReadHistory => ({
   id: id(d.articleId),
   title: d.title,
-  image: '',
+  image: d.image,
   readAt: d.lastReadAt,
   honey: d.honey,
 });
 
-// 전체 탭은 앱에서 추가 (문서: "8개 고정. 전체 탭은 앱에서 추가")
-export const toCategories = (list: CategoryDto[]): Category[] => [
-  { id: 'all', name: '전체' },
-  ...list.map((c) => ({ id: c.id, name: c.name, isNew: c.isNew })),
-];
+export const toCategories = (list: CategoryDto[]): Category[] => {
+  return [
+    { id: 'all', name: '전체' },
+    ...list.map((c) => ({ id: c.id, name: c.name, isNew: c.isNew })),
+  ];
+};
 export const toKeywords = (list: KeywordDto[]): Keyword[] =>
   list.map((k) => ({
     id: id(k.id),
@@ -136,7 +144,7 @@ export const toKeywords = (list: KeywordDto[]): Keyword[] =>
     image: k.image,
     category: k.category ?? '',
   }));
-// change 값 집합은 문서에 없음 → 대소문자 무시, 알 수 없으면 'same'
+
 export const toTrending = (list: TrendingDto[]): TrendingKeyword[] =>
   list.map((t) => {
     const c = t.change?.toLowerCase();

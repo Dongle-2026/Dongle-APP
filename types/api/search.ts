@@ -16,7 +16,7 @@ export interface TrendingDto {
   keyword: string;
   change?: string;
   isNew?: boolean;
-} // change의 값 집합은 문서에 없음
+}
 export interface SuggestionDto {
   keyword: string;
   type: string;

@@ -29,17 +29,31 @@ export default function NewsBody({ data, quizResults, onOpenQuiz }: Props) {
       {/* ── Article body ── */}
       <View style={{ padding: 16, paddingBottom: 8 }}>
         {/* Headline */}
-        <Text
-          style={{
-            fontSize: 17,
-            fontWeight: '500',
-            lineHeight: 26,
-            marginVertical: 12,
-          }}
-        >
-          {data.intro}
-        </Text>
-
+        {data.intro ? (
+          <Text
+            style={{
+              fontSize: 17,
+              fontWeight: '500',
+              lineHeight: 26,
+              marginVertical: 12,
+              color: '#22272B',
+            }}
+          >
+            {data.intro}
+          </Text>
+        ) : (
+          <View style={{ marginVertical: 12, gap: 8 }}>
+            <View
+              style={{ height: 18, backgroundColor: '#E1E1E1', borderRadius: 4, width: '100%' }}
+            />
+            <View
+              style={{ height: 18, backgroundColor: '#E1E1E1', borderRadius: 4, width: '85%' }}
+            />
+            <View
+              style={{ height: 18, backgroundColor: '#E1E1E1', borderRadius: 4, width: '60%' }}
+            />
+          </View>
+        )}
         {/* Body sections */}
         <View style={{ gap: 18 }}>
           {data.sections.map((section) => (

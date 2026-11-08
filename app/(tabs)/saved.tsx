@@ -1,5 +1,6 @@
 import { GlassChip } from '@/components/common/glass';
 import SectionHeader from '@/components/common/SectionHeader';
+import { DEFAULT_IMAGE } from '@/constants/common';
 import { useNewsDetail } from '@/context/NewsDetailContext';
 import { useReadHistory, useSavedNews, useSavedTermsAll } from '@/hooks/queries/queries';
 import { ReadHistory, SavedNews } from '@/types/saved';
@@ -17,7 +18,6 @@ type MiniNewsCardProps = {
 function MiniNewsCard({ item }: MiniNewsCardProps) {
   const { open } = useNewsDetail();
   const ref = useRef<View>(null);
-
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -52,9 +52,10 @@ function MiniNewsCard({ item }: MiniNewsCardProps) {
           backgroundColor: '#F0EEEC',
         }}
       >
-        {item.image ? (
-          <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} />
-        ) : null}
+        <Image
+          source={{ uri: item.image || DEFAULT_IMAGE }}
+          style={{ width: '100%', height: '100%' }}
+        />
         <LinearGradient
           colors={['rgba(0,0,0,0.01)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}

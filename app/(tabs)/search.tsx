@@ -272,7 +272,7 @@ export default function SearchScreen() {
   const { recentSearches, addRecent, removeRecent, clearAllRecent } = useRecentSearches();
 
   const { data: categories = [] } = useCategories(); // 매퍼가 '전체(all)' 추가
-  const { data: keywords = [], isLoading: keywordsLoading } = useKeywords();
+  const { data: keywords = [], isLoading: keywordsLoading } = useKeywords(selectedCategory, 10);
   const { data: trending = [] } = useTrending();
   const [debounced, setDebounced] = useState('');
   useEffect(() => {
