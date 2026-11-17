@@ -1,18 +1,31 @@
 import type { ISODate, ISODateTime, PageParams } from './common';
 
 export interface NewsListItemDto {
-  id: number;
+  id: number | string;
   title: string;
+  description: string;
+  content?: string;
   sourceName?: string;
   category: string;
   summary?: string;
-  publishedAt?: ISODateTime;
-  //image 추가
+  publishedAt?: string;
+  image?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  isSaved?: boolean;
+  slides?: Array<{
+    id: number | string;
+    type: string;
+    title: string;
+    description: string;
+    image?: string;
+  }>;
 }
 export interface NewsListParams extends PageParams {
   category?: string;
   keyword?: string;
   date?: ISODate;
+  limit?: number;
 }
 export interface RecommendedNewsDto {
   id: number;
