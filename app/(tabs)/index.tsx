@@ -152,7 +152,7 @@ export default function HomeScreen() {
         ref={listRef}
         data={news}
         renderItem={({ item }) => <NewsItem item={item} onPress={handleCardPress} />}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => (item.id != null ? String(item.id) : `news-${index}`)}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
         ListHeaderComponent={

@@ -3,10 +3,7 @@ import { router } from 'expo-router';
 import { Image, Text, View } from 'react-native';
 import { GlassCard, GlassChip, glass } from '../common/glass';
 
-// ─── 홈 헤더 ─────────────────────────────────────────────────────────────────
-
 type Props = {
-  /** SafeAreaView의 top inset — FlatList 안에서 호출 시 직접 넘겨줘야 함 */
   topInset?: number;
 };
 
@@ -15,7 +12,11 @@ export default function HomeHeader({ topInset = 52 }: Props) {
   const { data: me } = useMe();
   const streak = stats?.streak ?? 0;
   const todayHoney = stats?.todayHoney ?? 0;
-  const nickname = me?.nickname ?? '';
+  const nickname = me?.nickname ?? '돈글이';
+
+  // 목표 꿀단지 (예: 하루 목표 50P 기준 진행률)
+  const maxHoney = 50;
+  const progressPercent = Math.min(100, Math.max(0, (todayHoney / maxHoney) * 100));
 
   return (
     <>
@@ -34,48 +35,90 @@ export default function HomeHeader({ topInset = 52 }: Props) {
         <GlassChip label={`✨ ${streak}일`} selected onPress={() => router.navigate('/mypage')} />
       </View>
 
-      {/* ── 오늘 학습 유도 배너 (미완료 시) ── */}
-      {/* 기존 `todayHoney && (…)`는 0일 때 '0'이 그대로 렌더되는 버그 → 통계가 로드된 뒤에만 배너 표시 */}
       {stats && (
-        <View className="py-3 px-6">
+        <View className="py-2 px-6">
           <GlassCard onPress={() => {}}>
-            {todayHoney == 0 ? (
-              <View className="flex-row items-center gap-4 pb-2">
+            <View className="px-2">
+              <View className="flex-row items-center">
+                <View className="flex-1">
+                  {todayHoney === 0 ? (
+                    <>
+                      <Text
+                        style={{
+                          fontSize: 22,
+                          fontWeight: '700',
+                          color: glass.ink,
+                          lineHeight: 28,
+                        }}
+                      >
+                        {nickname}님, 오늘의{'\n'}꿀단지가 비어있어요!
+                      </Text>
+                      <Text style={{ fontSize: 13, color: glass.inkMuted, marginTop: 4 }}>
+                        오늘의 뉴스를 읽고 꿀을 모아보세요
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text
+                        style={{
+                          fontSize: 22,
+                          fontWeight: '600',
+                          color: glass.ink,
+                          lineHeight: 28,
+                        }}
+                      >
+                        {nickname}님, 오늘 <Text className="font-bold">{todayHoney}P</Text> {'\n'}
+                        꿀을 모았어요!
+                      </Text>
+                    </>
+                  )}
+                </View>
+
                 <Image
-                  source={require('@/assets/avatars/wow.png')}
+                  source={
+                    todayHoney === 0
+                      ? require('@/assets/avatars/sad.png')
+                      : require('@/assets/avatars/fire.png')
+                  }
                   style={{
-                    width: 48,
-                    height: 55,
+                    width: 90,
+                    height: 95,
+                    resizeMode: 'contain',
                   }}
                 />
-                <View>
-                  <Text style={{ fontSize: 20, fontWeight: '500', color: glass.ink }}>
-                    오늘의 꿀단지가 비었어요!
+              </View>
+
+              <View className="flex-row items-center">
+                <View
+                  style={{
+                    height: 12,
+                    width: '50%',
+                    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+                    borderRadius: 999,
+                    overflow: 'hidden',
+                    borderWidth: 1,
+                    borderColor: 'rgba(0, 0, 0, 0.01)',
+                  }}
+                >
+                  <View
+                    style={{
+                      width: `${Math.max(progressPercent, 4)}%`,
+                      height: '100%',
+                      backgroundColor: '#FFDC53',
+                      borderRadius: 999,
+                    }}
+                  />
+                </View>
+                <View className="flex-row items-center gap-1 pl-4">
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: glass.ink }}>
+                    {todayHoney}P
                   </Text>
-                  <Text style={{ fontSize: 14, lineHeight: 21, color: glass.inkMuted }}>
-                    {nickname}님 연속학습을 이어가세요!
+                  <Text style={{ fontSize: 11, fontWeight: '500', color: glass.inkMuted }}>
+                    / {maxHoney}P
                   </Text>
                 </View>
               </View>
-            ) : (
-              <View className="flex-row items-center gap-4 pb-2">
-                <Image
-                  source={require('@/assets/avatars/happy.png')}
-                  style={{
-                    width: 48,
-                    height: 55,
-                  }}
-                />
-                <View>
-                  <Text style={{ fontSize: 20, fontWeight: '500', color: glass.ink }}>
-                    오늘 {todayHoney}P 꿀을 모았어요
-                  </Text>
-                  <Text style={{ fontSize: 14, lineHeight: 21, color: glass.inkMuted }}>
-                    {nickname}님 잘하고 있어요!
-                  </Text>
-                </View>
-              </View>
-            )}
+            </View>
           </GlassCard>
         </View>
       )}

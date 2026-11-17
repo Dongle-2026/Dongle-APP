@@ -20,54 +20,66 @@ import {
 } from '@/hooks/queries/queries';
 import type { NotificationSetting, ProfileEditInput } from '@/types/mypage';
 import { Flame, LucideIcon, Newspaper, Settings, Share, Trophy } from 'lucide-react-native';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // ─── 작은 유틸 컴포넌트들 ────────────────────────────────────────────────────
 
-function StatPill({
-  icon: Icon,
-  label,
-  value,
-  accent,
-}: {
+type StatItem = {
   icon: LucideIcon;
   label: string;
   value: string;
-  accent?: boolean;
-}) {
+};
+
+function StatBar({ items }: { items: StatItem[] }) {
   return (
     <View
       style={{
-        flex: 1,
-        backgroundColor: accent ? glass.ink : glass.inkFaint,
-        borderRadius: 18,
-        padding: 14,
+        flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        backgroundColor: '#F6F6F8',
+        borderRadius: 28,
+        paddingVertical: 18,
       }}
     >
-      <Icon size={16} color={accent ? '#FFDC53' : glass.ink} />
-      <Text
-        style={{
-          fontSize: 18,
-          fontWeight: '800',
-          color: accent ? '#FFDC53' : glass.ink,
-          letterSpacing: -0.5,
-        }}
-      >
-        {value}
-      </Text>
-      <Text
-        style={{
-          fontSize: 11,
-          color: accent ? 'rgba(255,255,255,0.7)' : glass.inkMuted,
-          fontWeight: '600',
-        }}
-      >
-        {label}
-      </Text>
+      {items.map(({ icon: Icon, label, value }, i) => (
+        <Fragment key={label}>
+          {/* 세로 구분선 */}
+          {i > 0 && (
+            <View
+              style={{
+                width: 1,
+                height: 48,
+                backgroundColor: 'rgba(34, 39, 43, 0.15)',
+              }}
+            />
+          )}
+
+          <View style={{ flex: 1, alignItems: 'center', gap: 6 }}>
+            <Text
+              style={{
+                fontSize: 10,
+                color: 'rgba(34, 39, 43, 0.6)',
+              }}
+            >
+              {label}
+            </Text>
+            <View className="flex-row items-center gap-1">
+              <Icon size={16} color={glass.ink} strokeWidth={2} />
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '800',
+                  color: glass.ink,
+                }}
+              >
+                {value}
+              </Text>
+            </View>
+          </View>
+        </Fragment>
+      ))}
     </View>
   );
 }
@@ -176,8 +188,8 @@ export default function MypageScreen() {
             <ProfileAvatar
               uri={profile.profileImageUrl}
               avatarSource={selectedAvatar?.source}
-              size={72}
-              radius={22}
+              size={78}
+              radius={999}
             />
             <View style={{ flex: 1 }}>
               <View
@@ -192,25 +204,26 @@ export default function MypageScreen() {
                     fontSize: 20,
                     fontWeight: '800',
                     color: glass.ink,
-                    letterSpacing: -0.5,
                   }}
                 >
                   {profile.nickname}
                 </Text>
                 <GlassChip label="편집" onPress={() => setShowEditModal(true)} />
               </View>
-              <Text style={{ fontSize: 13, color: glass.inkMuted, marginTop: 4, lineHeight: 19 }}>
+              <Text style={{ fontSize: 13, color: glass.inkMuted }}>
                 {profile.bio || '소개를 작성해보세요'}
               </Text>
             </View>
           </View>
-          <View style={{ height: 1, backgroundColor: glass.inkFaint, marginVertical: 16 }} />
+          <View style={{ marginVertical: 8 }} />
           {/* 핵심 스탯 4개 */}
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <StatPill icon={Flame} label="연속 학습" accent value={`${stats?.streak ?? 0}일`} />
-            <StatPill icon={Newspaper} label="읽은 뉴스" value={`${stats?.readNewsCount ?? 0}`} />
-            <StatPill icon={Trophy} label="푼 퀴즈" value={`${quizCount}`} />
-          </View>
+          <StatBar
+            items={[
+              { icon: Flame, label: '연속 학습', value: `${stats?.streak ?? 0}일` },
+              { icon: Newspaper, label: '읽은 뉴스', value: `${stats?.readNewsCount ?? 0}` },
+              { icon: Trophy, label: '푼 퀴즈', value: `${quizCount}` },
+            ]}
+          />
         </GlassCard>
 
         {/* ── 활동 히트맵 ── */}

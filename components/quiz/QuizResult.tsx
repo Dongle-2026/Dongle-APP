@@ -72,12 +72,12 @@ export default function QuizResult({ totalHoney, correctCount, totalCount, onDon
 
         <Image
           source={require('@/assets/avatars/celebrate.png')}
-          style={{ width: 160, height: 160 }}
+          style={{ width: 180, height: 180 }}
           resizeMode="contain"
         />
 
         {/* Main Score Card */}
-        <View className="h-60 z-20 -mt-8">
+        <View className="h-60 z-20 -mt-10">
           <View
             style={{
               padding: 24,
