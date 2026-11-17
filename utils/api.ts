@@ -1,4 +1,3 @@
-
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 const API_TIMEOUT = parseInt(process.env.EXPO_PUBLIC_API_TIMEOUT || '30000');
 
@@ -38,15 +37,32 @@ class ApiClient {
   }
 
   async post<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<ApiResponse<T>> {
+    return this.send<T>('POST', endpoint, body, options);
+  }
+
+  async patch<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<ApiResponse<T>> {
+    return this.send<T>('PATCH', endpoint, body, options);
+  }
+
+  private async send<T>(
+    method: string,
+    endpoint: string,
+    body?: unknown,
+    options?: RequestInit
+  ): Promise<ApiResponse<T>> {
     try {
+      const isFormData = body instanceof FormData;
+
+      const headers: Record<string, string> = {
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+        ...(options?.headers as Record<string, string>),
+      };
+
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         ...options,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...options?.headers,
-        },
-        body: body ? JSON.stringify(body) : undefined,
+        method,
+        headers,
+        body: body ? (isFormData ? (body as FormData) : JSON.stringify(body)) : undefined,
         signal: this.getAbortSignal(),
       });
 

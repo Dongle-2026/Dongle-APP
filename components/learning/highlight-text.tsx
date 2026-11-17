@@ -1,25 +1,21 @@
-import type { TermDefinition } from '@/types/learning';
+import type { Term } from '@/types/learning';
 import { Text } from 'react-native';
 
 type Props = {
   text: string;
-  terms: TermDefinition[];
-  onTermPress: (term: TermDefinition) => void;
+  terms: Term[];
+  onTermPress: (term: Term) => void;
   style?: object;
 };
 
-/**
- * 본문 텍스트에서 용어 목록과 일치하는 단어를
- * 노란색 하이라이트 + 탭 가능하게 렌더링합니다.
- */
 export default function HighlightText({ text, terms, onTermPress, style }: Props) {
   // 용어 목록을 길이 내림차순으로 정렬 (긴 단어 먼저 매칭)
   const sortedTerms = [...terms].sort((a, b) => b.term.length - a.term.length);
 
-  type Segment = { text: string; term: TermDefinition | null };
+  type Segment = { text: string; term: Term | null; index: number };
 
   const buildSegments = (input: string): Segment[] => {
-    if (sortedTerms.length === 0) return [{ text: input, term: null }];
+    if (sortedTerms.length === 0) return [{ text: input, term: null, index: 0 }];
 
     const pattern = new RegExp(
       `(${sortedTerms.map((t) => t.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
@@ -27,19 +23,28 @@ export default function HighlightText({ text, terms, onTermPress, style }: Props
     );
     const parts = input.split(pattern);
 
-    return parts.map((part) => {
+    const highlightedTerms = new Set<string>();
+
+    return parts.map((part, index) => {
       const matched = sortedTerms.find((t) => t.term === part);
-      return { text: part, term: matched ?? null };
+
+      if (matched && !highlightedTerms.has(matched.term)) {
+        highlightedTerms.add(matched.term);
+        return { text: part, term: matched, index };
+      }
+
+      return { text: part, term: null, index };
     });
   };
 
   const segments = buildSegments(text);
 
   return (
-    <Text style={[{ fontSize: 16, lineHeight: 28, color: '#8A8A8D' }, style]}>
+    <Text style={[{ fontSize: 16, lineHeight: 28, color: '#484849' }, style]}>
       {segments.map((seg, i) =>
         seg.term ? (
-          <Text key={`${seg.text}-${i}`}>
+          /* 💡 key에 seg.term.id와 index를 조합하여 절대 겹치지 않게 고유값 보장 */
+          <Text key={`hl-${seg.term.id}-${seg.index}`}>
             <Text
               onPress={() => onTermPress(seg.term!)}
               style={{

@@ -6,7 +6,7 @@ export type Term = {
   definition: string;
   example?: string;
   isSaved?: boolean; // 서버가 내려주는 저장 여부 (초기 상태로 사용)
-  // TODO?: category
+  category?: string; // [추가] 본문 응답 terms[].category
 };
 
 // POST /api/terms/:id/save | /unsave 의 응답 data
@@ -26,9 +26,8 @@ export type Quiz = {
   id: string;
   question: string;
   choices: QuizChoice[];
-  answerIndex: number;
-  explanation: string;
   honey: number; // 획득 꿀 포인트
+  // [삭제] answerIndex / explanation — 본문 응답에 없고, 제출(A11) 응답으로만 내려옴
 };
 
 // 본문 내용 섹션 분리
@@ -44,7 +43,12 @@ export type QuizResult = {
   selectedIndex: number;
   isCorrect: boolean;
   earnedHoney: number;
+  alreadySolved?: boolean; // [추가] 제출 응답
+  correctIndex?: number; // [추가] 정답일 때만 내려옴
+  explanation?: string; // [추가] 정답일 때만 내려옴
 };
+
+export type QuizStatus = 'READY' | 'GENERATING' | 'UNAVAILABLE'; // [추가]
 
 export type NewsBodyData = {
   newsId: string;
@@ -54,20 +58,7 @@ export type NewsBodyData = {
   sections: NewsBodySection[];
   terms: Term[];
   quizzes: Quiz[];
-  quizResults: QuizResult[];
+  quizStatus: QuizStatus; // [추가] 퀴즈 생성 상태
+  quizResults: QuizResult[]; // 복원된 결과는 selectedIndex = -1
   tags: string[];
 };
-
-// 정답 확인 - API 타입으로 분리
-// export interface SubmitQuizRequest {
-//   selectedIndex: number;
-// }
-
-// export interface SubmitQuizResponse {
-//   quizId: string;
-//   selectedIndex: number;
-//   isCorrect: boolean;
-//   earnedHoney: number;
-//   alreadyAnswered: boolean;
-//   totalHoney: number;
-// }

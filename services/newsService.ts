@@ -1,177 +1,40 @@
-import type { CardNews, Slide, UserAction } from '@/types';
-import { type ApiResponse } from '@/utils/api';
-import { CARD_NEWS, MOCK_IMAGES } from '@/utils/mock';
-
-// 'news-12' → 12. 그 외 형식의 id는 문자열 해시로 안정적인 숫자로 변환 (NaN 방지)
-const toNumericId = (id: string): number => {
-  const n = Number(id.replace('news-', ''));
-  if (Number.isInteger(n) && n >= 0) return n;
-  let h = 0;
-  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return h;
-};
-
-const generateSlides = (id: number): Slide[] => {
-  const baseSlides = CARD_NEWS[id % CARD_NEWS.length] ?? CARD_NEWS[0]; // [수정] 방어 코드
-  const imageUrl = MOCK_IMAGES[id % MOCK_IMAGES.length];
-  return baseSlides.map((slide, idx) => ({
-    id: `slide-${id}-${idx}`,
-    type: slide.type as 'image' | 'content',
-    image: slide.type === 'image' ? imageUrl : undefined,
-    title: slide.title || '',
-    description: slide.description || '',
-  }));
-};
-
-const TITLES = [
-  '📱 새로운 AI 기술이 바꿀 미래의 일자리',
-  '🚀 스타트업 시장, 올해 투자 사상 최대 기록 경신',
-  '💡 블록체인 기술의 실제 활용 사례 8가지',
-  '🌟 SVG 애니메이션 마스터하기',
-  '⚡ React 19의 새로운 기능 완벽 정리',
-  '🎨 UI/UX 트렌드 2024 완전 분석',
-  '💻 웹 개발자가 알아야 할 성능 최적화 팁',
-  '🔐 사이버 보안 위협과 대응 방안',
-];
-const DESCRIPTIONS = [
-  'AI 기술의 급속한 발전으로 미래의 일자리 시장이 어떻게 변할지 살펴봅니다.',
-  '올해 스타트업 투자 규모가 사상 최대를 기록했습니다. 그 배경을 알아봅시다.',
-  '블록체인 기술이 실제로 어떻게 활용되고 있는지 구체적인 사례를 통해 설명합니다.',
-  'SVG를 활용한 멋진 애니메이션 효과를 만드는 방법을 단계별로 배워봅시다.',
-  'React 19에서 추가된 새로운 기능들을 문법과 예제와 함께 정리했습니다.',
-  '2024년의 UI/UX 디자인 트렌드를 최신 사례와 함께 분석해봅니다.',
-  '웹 성능을 개선하기 위한 필수 최적화 기법들을 실제 예제와 함께 소개합니다.',
-  '최근의 주요 사이버 보안 위협과 이에 대한 effective 대응 방안을 살펴봅니다.',
-];
-// 숫자 id 하나로 항상 같은 뉴스를 만들어 주는 mock (목록/상세/재조회가 서로 일치)
-const buildMockNews = (id: number): CardNews => ({
-  id: `news-${id}`,
-  title: TITLES[id % 8],
-  description: DESCRIPTIONS[id % 8],
-  content: '이 기사의 전체 내용입니다. 더 자세한 정보가 포함되어 있습니다.',
-  image: MOCK_IMAGES[id % MOCK_IMAGES.length],
-  category: '전체',
-  createdAt: new Date(Date.now() - (id % 7) * 24 * 60 * 60 * 1000).toISOString(), // [수정] Math.random → 결정적
-  updatedAt: new Date().toISOString(),
-  url: `https://example.com/news/${id}`,
-  isSaved: id % 5 === 0, // [수정] Math.random → 결정적 (열 때마다 저장 상태가 바뀌지 않게)
-  slides: generateSlides(id),
-});
-
-const generateMockNews = (page: number, limit: number): CardNews[] =>
-  Array.from({ length: limit }, (_, i) => buildMockNews((page - 1) * limit + i));
-
-async function getNewsById(id: string) {
-  return new Promise<{ data: CardNews; status: number }>((resolve) => {
-    setTimeout(() => {
-      resolve({ data: { ...buildMockNews(toNumericId(id)), id }, status: 200 });
-    }, 500);
-  });
-}
+import type { Page, PageParams } from '@/types/api/common';
+import type { NewsBodyDto } from '@/types/api/learning';
+import type {
+  BookmarkStateDto,
+  CardNewsDetailDto,
+  CardNewsSummaryDto,
+  NewsDetailDto,
+  NewsListItemDto,
+  NewsListParams,
+  RecommendedNewsDto,
+} from '@/types/api/news';
+import { http } from './api/client';
 
 export const newsService = {
-  async getLatestNews(page: number = 1, limit: number = 10): Promise<ApiResponse<CardNews[]>> {
-    // 실제 API 사용 시 주석 해제
-    // return apiClient.get<CardNews[]>(`/api/news?page=${page}&limit=${limit}`);
+  list: (p: NewsListParams = {}) =>
+    http.get<Page<NewsListItemDto>>('/api/news', { query: { ...p }, auth: 'optional' }),
+  today: () => http.get<NewsListItemDto[]>('/api/news/today', { auth: 'optional' }),
+  recommend: () => http.get<RecommendedNewsDto[]>('/api/news/recommend'),
+  search: (q: string, p: PageParams = {}) =>
+    http.get<Page<NewsListItemDto>>('/api/news/search', { query: { q, ...p }, auth: 'optional' }),
+  detail: (id: string | number) => http.get<NewsDetailDto>(`/api/news/${id}`, { auth: 'none' }),
+  body: (id: string | number) =>
+    http.get<NewsBodyDto>(`/api/news/${id}/body`, { auth: 'optional' }),
+  bookmarkStatus: (id: string | number) => http.get<BookmarkStateDto>(`/api/news/${id}/bookmark`),
+  save: (id: string | number) => http.post<BookmarkStateDto>(`/api/news/${id}/save`),
+  unsave: (id: string | number) => http.post<BookmarkStateDto>(`/api/news/${id}/unsave`),
+  markRead: (id: string | number, durationSeconds?: number) =>
+    http.post<void>(`/api/news/${id}/read`, { query: { durationSeconds } }),
+  // POST/PUT/DELETE /api/news/{id}/bookmark 는 "기존 호환" → 앱은 save / unsave 사용 (미구현)
+};
 
-    // Mock 데이터 반환
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: generateMockNews(page, limit),
-          status: 200,
-        });
-      }, 800); // 실제 네트워크 지연 시뮬레이션
-    });
-  },
-
-  async getNewsByCategory(
-    category: string,
-    page: number = 1,
-    limit: number = 10
-  ): Promise<ApiResponse<CardNews[]>> {
-    // 실제 API 사용 시 주석 해제
-    // return apiClient.get<CardNews[]>(`/api/news?category=${category}&page=${page}&limit=${limit}`);
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const allNews = generateMockNews(page, limit);
-        const filtered = allNews.filter((n) => n.category === category);
-        resolve({
-          data: filtered,
-          status: 200,
-        });
-      }, 800);
-    });
-  },
-
-  async getNewsById(id: string): Promise<ApiResponse<CardNews>> {
-    // 실제 API 사용 시 주석 해제
-    // return apiClient.get<CardNews>(`/api/news/${id}`);
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const numericId = Number(id.replace('news-', ''));
-        const page = Math.floor(numericId / 10) + 1;
-        const index = numericId % 10;
-        const news = generateMockNews(page, 10)[index];
-
-        resolve({
-          data: news ? { ...news, id } : generateMockNews(1, 10)[0],
-          status: 200,
-        });
-      }, 500);
-    });
-  },
-
-  async searchNews(query: string, page: number = 1): Promise<ApiResponse<CardNews[]>> {
-    // 실제 API 사용 시 주석 해제
-    // return apiClient.get<CardNews[]>(`/api/news/search?q=${encodeURIComponent(query)}&page=${page}`);
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: generateMockNews(page, 10),
-          status: 200,
-        });
-      }, 800);
-    });
-  },
-
-  // Save/Unsave
-  async saveNews(newsId: string): Promise<ApiResponse<UserAction>> {
-    // 실제 API 사용 시 주석 해제
-    // return apiClient.post<UserAction>(`/api/news/${newsId}/save`, {});
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: {
-            newsId,
-            action: 'save',
-            timestamp: new Date().toISOString(),
-          },
-          status: 200,
-        });
-      }, 300);
-    });
-  },
-
-  async unsaveNews(newsId: string): Promise<ApiResponse<UserAction>> {
-    // 실제 API 사용 시 주석 해제
-    // return apiClient.post<UserAction>(`/api/news/${newsId}/unsave`, {});
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: {
-            newsId,
-            action: 'unsave',
-            timestamp: new Date().toISOString(),
-          },
-          status: 200,
-        });
-      }, 300);
-    });
-  },
+export const cardNewsService = {
+  list: (p: PageParams = {}) =>
+    http.get<Page<CardNewsSummaryDto>>('/api/card-news', { query: { ...p }, auth: 'none' }),
+  byArticle: (articleId: string | number) =>
+    http.get<CardNewsDetailDto>(`/api/card-news/article/${articleId}`, { auth: 'none' }),
+  byId: (cardNewsId: string | number) =>
+    http.get<CardNewsDetailDto>(`/api/card-news/${cardNewsId}`, { auth: 'none' }),
+  // POST /api/card-news/{articleId}/generate 는 ADMIN 전용 (미구현)
 };

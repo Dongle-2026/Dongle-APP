@@ -8,7 +8,7 @@ export type SavedTerm = {
 export type SavedNews = {
   id: string;
   title: string;
-  image: string;
+  image?: string;
   category: string;
   createdAt: string;
   isSaved: boolean;
@@ -18,7 +18,7 @@ export type SavedNews = {
 export type ReadHistory = {
   id: string;
   title: string;
-  image: string;
+  image?: string;
   readAt: string;
   honey: number; // 획득한 꿀
 };

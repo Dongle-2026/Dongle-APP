@@ -1,7 +1,10 @@
+import { authStore } from '@/auth/authStore';
 import NewsDetail from '@/components/news/news-detail';
 import { NewsDetailProvider, useNewsDetail } from '@/context/NewsDetailContext';
+import { queryClient } from '@/lib/queryClient';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -52,6 +55,12 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const { status } = authStore.useAuth();
+
+  // 앱 시작 시 저장된 토큰 확인 → status: 'authed' | 'anon'
+  useEffect(() => {
+    void authStore.bootstrap();
+  }, []);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -59,12 +68,12 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && status !== 'loading') {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, status]);
 
-  if (!loaded) {
+  if (!loaded || status === 'loading') {
     return null;
   }
 
@@ -73,17 +82,35 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { status } = authStore.useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  // 인증 상태에 따른 화면 분기
+  useEffect(() => {
+    // 현재 경로가 로그인 화면인지 여부를 유연하게 체크
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (status === 'anon' && !inAuthGroup) {
+      router.replace('/(auth)/login');
+    } else if (status === 'authed' && inAuthGroup) {
+      router.replace('/(tabs)');
+    }
+  }, [status, segments, router]);
 
   return (
-    <NewsDetailProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="news-list" options={{ headerShown: false }} />
-          <Stack.Screen name="glass-demo" options={{ headerShown: false }} />
-        </Stack>
-      </ThemeProvider>
-      <NewsDetailPortal />
-    </NewsDetailProvider>
+    <QueryClientProvider client={queryClient}>
+      <NewsDetailProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="news-list" options={{ headerShown: false }} />
+            <Stack.Screen name="glass-demo" options={{ headerShown: false }} />
+          </Stack>
+        </ThemeProvider>
+        {status === 'authed' && <NewsDetailPortal />}
+      </NewsDetailProvider>
+    </QueryClientProvider>
   );
 }

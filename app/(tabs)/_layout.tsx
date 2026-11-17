@@ -7,9 +7,7 @@ export default function TabLayout() {
       tabBar={(props) => <TabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        // 탭 전환 시 fade 애니메이션
         animation: 'fade',
-        // 탭바 자체는 숨김 (커스텀 TabBar 사용)
         tabBarStyle: { display: 'none' },
       }}
     >

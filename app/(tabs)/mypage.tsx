@@ -5,96 +5,150 @@ import ProfileAvatar from '@/components/mypage/ProfileAvatar';
 import ProfileEditModal from '@/components/mypage/ProfileEditModal';
 import SettingsModal from '@/components/mypage/SettingsModal';
 
-import { profileService } from '@/services/profileService';
-import type { NotificationSetting, ProfileEditInput, UserProfile } from '@/types/mypage';
+import { AVATAR_OPTIONS } from '@/constants/avatars';
 import {
-  AVATAR_OPTIONS,
-  mockActivityData,
-  mockNotificationSettings,
-  mockProfile,
-  mockUserActivity,
-  mockUserStats
-} from '@/utils/mock';
+  useLogout,
+  useUpdateNotificationSettings,
+  useUpdateProfile,
+} from '@/hooks/queries/mutations';
+import {
+  useMe,
+  useMyActivity,
+  useMyInsights,
+  useMyStats,
+  useNotificationSettings,
+} from '@/hooks/queries/queries';
+import type { NotificationSetting, ProfileEditInput } from '@/types/mypage';
 import { Flame, LucideIcon, Newspaper, Settings, Share, Trophy } from 'lucide-react-native';
-import { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Fragment, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // ─── 작은 유틸 컴포넌트들 ────────────────────────────────────────────────────
 
-function StatPill({
-  icon: Icon,
-  label,
-  value,
-  accent,
-}: {
+type StatItem = {
   icon: LucideIcon;
   label: string;
   value: string;
-  accent?: boolean;
-}) {
+};
+
+function StatBar({ items }: { items: StatItem[] }) {
   return (
     <View
       style={{
-        flex: 1,
-        backgroundColor: accent ? glass.ink : glass.inkFaint,
-        borderRadius: 18,
-        padding: 14,
+        flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        backgroundColor: '#F6F6F8',
+        borderRadius: 28,
+        paddingVertical: 18,
       }}
     >
-      <Icon size={16} color={accent ? '#FFDC53' : glass.ink} />
-      <Text
-        style={{
-          fontSize: 18,
-          fontWeight: '800',
-          color: accent ? '#FFDC53' : glass.ink,
-          letterSpacing: -0.5,
-        }}
-      >
-        {value}
-      </Text>
-      <Text
-        style={{
-          fontSize: 11,
-          color: accent ? 'rgba(255,255,255,0.7)' : glass.inkMuted,
-          fontWeight: '600',
-        }}
-      >
-        {label}
-      </Text>
+      {items.map(({ icon: Icon, label, value }, i) => (
+        <Fragment key={label}>
+          {/* 세로 구분선 */}
+          {i > 0 && (
+            <View
+              style={{
+                width: 1,
+                height: 48,
+                backgroundColor: 'rgba(34, 39, 43, 0.15)',
+              }}
+            />
+          )}
+
+          <View style={{ flex: 1, alignItems: 'center', gap: 6 }}>
+            <Text
+              style={{
+                fontSize: 10,
+                color: 'rgba(34, 39, 43, 0.6)',
+              }}
+            >
+              {label}
+            </Text>
+            <View className="flex-row items-center gap-1">
+              <Icon size={16} color={glass.ink} strokeWidth={2} />
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '800',
+                  color: glass.ink,
+                }}
+              >
+                {value}
+              </Text>
+            </View>
+          </View>
+        </Fragment>
+      ))}
     </View>
   );
 }
+// 서버에 저장된 설정이 없을 때의 기본값 (문서: 저장 전 기본값 모두 true)
+const DEFAULT_NOTIF: NotificationSetting = {
+  dailyDigest: true,
+  quizReminder: true,
+  streakAlert: true,
+};
+
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 export default function MypageScreen() {
-  const [profile, setProfile] = useState<UserProfile>(mockProfile);
-  const [notifSettings, setNotifSettings] = useState<NotificationSetting>(mockNotificationSettings);
+  const meQuery = useMe(); // GET /api/me
+  const profile = meQuery.data;
+  const { data: stats } = useMyStats(); // GET /api/me/stats
+  const { data: activity = [] } = useMyActivity(126); // GET /api/me/activity (빈 날 포함, level 제공)
+  const { data: insights } = useMyInsights(); // GET /api/me/insights
+  const { data: notif } = useNotificationSettings();
+  const updateProfile = useUpdateProfile();
+  const updateNotif = useUpdateNotificationSettings();
+  const logout = useLogout();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
   const handleProfileSave = async (input: ProfileEditInput) => {
-    const prev = profile;
-    setProfile((p) => ({
-      ...p,
-      nickname: input.nickname,
-      bio: input.bio,
-      avatarId: input.avatarId,
-      // 새 사진은 업로드가 끝나기 전까지 로컬 uri로 먼저 보여줌
-      profileImageUrl: input.image === undefined ? p.profileImageUrl : (input.image?.uri ?? null),
-    }));
     try {
-      setProfile(await profileService.updateProfile(prev, input));
+      await updateProfile.mutateAsync({
+        params: {
+          nickname: input.nickname,
+          bio: input.bio,
+          avatarId: input.avatarId,
+          removeImage: input.image === null ? true : undefined, // image와 removeImage 동시 전송 금지
+        },
+        image: input.image ?? undefined,
+      });
     } catch {
-      setProfile(prev);
       Alert.alert('저장 실패', '프로필을 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
     }
   };
 
+  const quizCount = stats?.quizCount ?? 0;
+  // 퀴즈를 푼 적이 없으면 0으로 (0으로 나누면 NaN% 가 되어 progress bar가 깨짐)
+  const correctRate =
+    quizCount > 0 ? Math.round(((stats?.correctCount ?? 0) / quizCount) * 100) : 0;
+
+  if (!profile) {
+    return (
+      <SafeAreaView
+        edges={['top', 'left', 'right']}
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#F9F9F9',
+        }}
+      >
+        {meQuery.isError ? (
+          <TouchableOpacity onPress={() => void meQuery.refetch()}>
+            <Text style={{ color: glass.inkMuted }}>프로필을 불러오지 못했어요. 다시 시도</Text>
+          </TouchableOpacity>
+        ) : (
+          <ActivityIndicator color="#898989" />
+        )}
+      </SafeAreaView>
+    );
+  }
+
   const selectedAvatar = AVATAR_OPTIONS.find((avatar) => avatar.id === profile.avatarId);
-  const correctRate = Math.round((mockUserStats.correctCount / mockUserStats.quizCount) * 100);
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={{ backgroundColor: '#F9F9F9' }}>
@@ -112,6 +166,7 @@ export default function MypageScreen() {
             paddingHorizontal: 20,
             paddingBottom: 4,
             gap: 8,
+            paddingTop: 8,
           }}
         >
           <Text className="text-[32px]">마이페이지</Text>
@@ -133,8 +188,8 @@ export default function MypageScreen() {
             <ProfileAvatar
               uri={profile.profileImageUrl}
               avatarSource={selectedAvatar?.source}
-              size={72}
-              radius={22}
+              size={78}
+              radius={999}
             />
             <View style={{ flex: 1 }}>
               <View
@@ -149,25 +204,26 @@ export default function MypageScreen() {
                     fontSize: 20,
                     fontWeight: '800',
                     color: glass.ink,
-                    letterSpacing: -0.5,
                   }}
                 >
                   {profile.nickname}
                 </Text>
                 <GlassChip label="편집" onPress={() => setShowEditModal(true)} />
               </View>
-              <Text style={{ fontSize: 13, color: glass.inkMuted, marginTop: 4, lineHeight: 19 }}>
+              <Text style={{ fontSize: 13, color: glass.inkMuted }}>
                 {profile.bio || '소개를 작성해보세요'}
               </Text>
             </View>
           </View>
-          <View style={{ height: 1, backgroundColor: glass.inkFaint, marginVertical: 16 }} />
+          <View style={{ marginVertical: 8 }} />
           {/* 핵심 스탯 4개 */}
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <StatPill icon={Flame} label="연속 학습" accent value={`${mockUserStats.streak}일`} />
-            <StatPill icon={Newspaper} label="읽은 뉴스" value={`${mockUserStats.readNewsCount}`} />
-            <StatPill icon={Trophy} label="푼 퀴즈" value={`${mockUserStats.quizCount}`} />
-          </View>
+          <StatBar
+            items={[
+              { icon: Flame, label: '연속 학습', value: `${stats?.streak ?? 0}일` },
+              { icon: Newspaper, label: '읽은 뉴스', value: `${stats?.readNewsCount ?? 0}` },
+              { icon: Trophy, label: '푼 퀴즈', value: `${quizCount}` },
+            ]}
+          />
         </GlassCard>
 
         {/* ── 활동 히트맵 ── */}
@@ -183,11 +239,11 @@ export default function MypageScreen() {
                 marginBottom: 12,
               }}
             >
-              {mockUserStats.totalHoney.toLocaleString()}
+              {(stats?.totalHoney ?? 0).toLocaleString()}
             </Text>
             <Text className="text-mono-500 text-sm">모았어요!</Text>
           </View>
-          <ActivityHeatmap data={mockActivityData} />
+          <ActivityHeatmap data={activity} />
         </GlassCard>
 
         {/* ── 내 활동 ── */}
@@ -225,7 +281,7 @@ export default function MypageScreen() {
                     letterSpacing: -1,
                   }}
                 >
-                  {mockUserStats.quizCount > 0 ? correctRate : 0}%
+                  {correctRate}%
                 </Text>
               </View>
 
@@ -236,7 +292,7 @@ export default function MypageScreen() {
                   fontWeight: '600',
                 }}
               >
-                총 {mockUserStats.quizCount}문제
+                총 {quizCount}문제
               </Text>
             </View>
 
@@ -292,7 +348,7 @@ export default function MypageScreen() {
                   gap: 7,
                 }}
               >
-                {mockUserActivity.interests.map((category) => (
+                {(insights?.interests ?? []).map((category) => (
                   <View
                     key={category}
                     style={{
@@ -337,7 +393,7 @@ export default function MypageScreen() {
                   gap: 7,
                 }}
               >
-                {mockUserActivity.weaks.map((category) => (
+                {(insights?.weaks ?? []).map((category) => (
                   <View
                     key={category}
                     style={{
@@ -382,11 +438,11 @@ export default function MypageScreen() {
       <SettingsModal
         visible={showSettings}
         profile={profile}
-        notificationSettings={notifSettings}
-        onUpdateNotifications={setNotifSettings}
+        notificationSettings={notif ?? DEFAULT_NOTIF}
+        onUpdateNotifications={(n: NotificationSetting) => updateNotif.mutate(n)}
         onLogout={() => {
           setShowSettings(false);
-          // 실제 로그아웃 로직 연결
+          logout.mutate(); // 토큰 삭제 + 캐시 초기화 → 인증 분기가 로그인 화면으로 이동
         }}
         onClose={() => setShowSettings(false)}
       />

@@ -2,16 +2,16 @@ import type { NotificationSetting, UserProfile } from '@/types/mypage';
 import { Bell, BellOff, ChevronRight, LogOut, Shield, X } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
-    Alert,
-    Animated,
-    Dimensions,
-    Modal,
-    Pressable,
-    ScrollView,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Animated,
+  Dimensions,
+  Modal,
+  Pressable,
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 type Props = {
@@ -23,16 +23,16 @@ type Props = {
   onClose: () => void;
 };
 
-const PROVIDER_LABEL: Record<UserProfile['oauthProvider'], string> = {
+const PROVIDER_LABEL: Record<string, string> = {
   kakao: '카카오로 로그인',
   google: '구글로 로그인',
-  apple: '애플로 로그인',
+  email: '이메일 회원가입',
 };
 
-const PROVIDER_COLOR: Record<UserProfile['oauthProvider'], string> = {
+const PROVIDER_COLOR: Record<string, string> = {
   kakao: '#FEE500',
   google: '#4285F4',
-  apple: '#000',
+  email: '#898989',
 };
 
 export default function SettingsModal({
@@ -46,6 +46,10 @@ export default function SettingsModal({
   const [settings, setSettings] = useState(notificationSettings);
   const slideAnim = useRef(new Animated.Value(600)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
+
+  const providerKey = profile?.oauthProvider || 'email';
+  const providerLabel = PROVIDER_LABEL[providerKey] || '일반 회원가입';
+  const providerColor = PROVIDER_COLOR[providerKey] || '#898989';
 
   useEffect(() => {
     if (visible) {
@@ -220,22 +224,18 @@ export default function SettingsModal({
                       width: 36,
                       height: 36,
                       borderRadius: 10,
-                      backgroundColor: PROVIDER_COLOR[profile.oauthProvider] + '20',
+                      backgroundColor: providerColor + '20',
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
                   >
                     <Text style={{ fontSize: 18 }}>
-                      {profile.oauthProvider === 'kakao'
-                        ? '💬'
-                        : profile.oauthProvider === 'google'
-                          ? '🌐'
-                          : '🍎'}
+                      {providerKey === 'kakao' ? '💬' : providerKey === 'google' ? '🌐' : '✉️'}
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: '700', color: '#22272B' }}>
-                      {PROVIDER_LABEL[profile.oauthProvider]}
+                      {providerLabel}
                     </Text>
                     <Text style={{ fontSize: 11, color: '#898989', marginTop: 1 }}>
                       가입일 {profile.joinedAt}

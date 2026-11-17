@@ -1,13 +1,20 @@
 import DetailHeader from '@/components/common/DetailHeader';
 import { GlassCard, GlassSurface, glass } from '@/components/common/glass';
 import TermModal from '@/components/learning/term-modal';
-import { useTermSave } from '@/hooks/use-term-save';
+import { useToggleTermSave } from '@/hooks/queries/mutations';
+import { useSavedTermsAll } from '@/hooks/queries/queries';
 import type { Term } from '@/types/learning';
-import { mockSavedTerms } from '@/utils/mock'; // TODO: 저장한 용어 API로 교체 (TermDefinition[] 형태: id/term/definition/example)
 import { Stack } from 'expo-router';
 import { BookOpen } from 'lucide-react-native';
 import { useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CHO = [
@@ -64,9 +71,10 @@ export default function SavedTermsScreen() {
   const scroll = useRef<ScrollView>(null);
   const ys = useRef<Record<string, number>>({});
 
-  const [terms, setTerms] = useState<Term[]>(mockSavedTerms as Term[]);
+  const { data: terms = [], isLoading, error, refetch } = useSavedTermsAll(); // GET /api/me/saved-terms
   const [activeTerm, setActiveTerm] = useState<Term | null>(null);
-  const { isSaved, save, unsave, savedIds } = useTermSave(terms.map((t) => t.id));
+  const toggleTerm = useToggleTermSave();
+  const isSaved = (id: string) => terms.some((t) => t.id === id);
 
   const groups = useMemo(() => {
     const m = new Map<string, Term[]>();
@@ -85,18 +93,26 @@ export default function SavedTermsScreen() {
       scroll.current?.scrollTo({ y: Math.max((ys.current[k] ?? 0) - 8, 0), animated: true });
   };
 
-  // 모달에서 저장 해제한 용어는 모달이 닫힐 때 목록에서 제거 (열려 있는 동안 목록이 흔들리지 않게)
-  const closeModal = () => {
-    setActiveTerm(null);
-    setTerms((prev) => prev.filter((t) => savedIds.has(t.id)));
-  };
-
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: '#F9F9F9' }}>
       <Stack.Screen
         options={{ headerShown: false, animation: 'slide_from_right', gestureEnabled: true }}
       />
       <DetailHeader title="저장한 용어" subtitle={`${terms.length}개`} />
+      {isLoading && <ActivityIndicator style={{ marginTop: 40 }} color="#898989" />}
+      {error && terms.length === 0 && (
+        <View style={{ alignItems: 'center', marginTop: 40, gap: 8 }}>
+          <Text style={{ color: glass.inkMuted }}>저장한 용어를 불러오지 못했어요</Text>
+          <TouchableOpacity onPress={() => void refetch()}>
+            <Text style={{ fontWeight: '700', color: glass.ink }}>다시 시도</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      {!isLoading && !error && terms.length === 0 && (
+        <Text style={{ textAlign: 'center', marginTop: 140, color: glass.inkMuted }}>
+          저장한 용어가 없어요
+        </Text>
+      )}
 
       <ScrollView
         ref={scroll}
@@ -179,9 +195,9 @@ export default function SavedTermsScreen() {
       <TermModal
         term={activeTerm}
         isSaved={activeTerm ? isSaved(activeTerm.id) : false}
-        onSave={save}
-        onUnsave={unsave}
-        onClose={closeModal}
+        onSave={(t) => toggleTerm.mutate({ termId: t.id, next: true })}
+        onUnsave={(t) => toggleTerm.mutate({ termId: t.id, next: false })}
+        onClose={() => setActiveTerm(null)}
       />
     </SafeAreaView>
   );

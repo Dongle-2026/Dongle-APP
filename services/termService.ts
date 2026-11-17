@@ -1,17 +1,22 @@
-import type { TermAction } from '@/types/learning';
-import { type ApiResponse } from '@/utils/api';
-
-// newsService와 같은 패턴. 실제 API 연결 시 mock 부분을 apiClient 호출로 교체하세요.
-const mock = (termId: string, action: TermAction['action']): Promise<ApiResponse<TermAction>> =>
-  new Promise((resolve) =>
-    setTimeout(
-      () => resolve({ data: { termId, action, timestamp: new Date().toISOString() }, status: 200 }),
-      300
-    )
-  );
+import type { Page, PageParams } from '@/types/api/common';
+import type { TermDetailDto, TermFullDto, TermListItemDto } from '@/types/api/learning';
+import type { BookmarkStateDto } from '@/types/api/news';
+import { http } from './api/client';
 
 export const termService = {
-  saveTerm: (termId: string) => mock(termId, 'save'), // return apiClient.post<TermAction>(`/api/terms/${termId}/save`, {});
-  unsaveTerm: (termId: string) => mock(termId, 'unsave'), // return apiClient.post<TermAction>(`/api/terms/${termId}/unsave`, {});
+  save: (termId: string | number) => http.post<BookmarkStateDto>(`/api/terms/${termId}/save`),
+  unsave: (termId: string | number) => http.post<BookmarkStateDto>(`/api/terms/${termId}/unsave`),
+  learn: (termId: string | number) => http.post<void>(`/api/terms/${termId}/learn`),
+  detail: (termId: string | number) =>
+    http.get<TermDetailDto>(`/api/terms/${termId}`, { auth: 'optional' }),
+  list: (p: PageParams & { path?: string } = {}) =>
+    http.get<Page<TermListItemDto>>('/api/terms', { query: { ...p }, auth: 'none' }),
+  autocomplete: (query: string, limit = 5) =>
+    http.get<TermFullDto[]>('/api/terms/autocomplete', { query: { query, limit }, auth: 'none' }),
+  byCategory: (path: string) =>
+    http.get<TermFullDto[]>('/api/terms/category', { query: { path }, auth: 'none' }),
+  byLevel: (maxLevel = 3) =>
+    http.get<TermFullDto[]>('/api/terms/level', { query: { maxLevel }, auth: 'none' }),
+  search: (query: string, limit = 10) =>
+    http.get<TermListItemDto[]>('/api/terms/search', { query: { query, limit }, auth: 'none' }),
 };
-// services/index.ts 에 추가: export * from './termService';
